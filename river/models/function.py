@@ -19,9 +19,9 @@ class Function(BaseModel):
         return "%s - %s" % (self.name, "v%s" % self.version)
 
     def get(self):
-        func = loaded_functions.get(self.name, None)
-        if not func or func["version"] != self.version:
-            func = {"function": self._load(), "version": self.version}
+        func = loaded_functions.get(self.pk, None)
+        if not func or func["version"] != self.version or func["body"] != self.body:
+            func = {"function": self._load(), "version": self.version, "body": self.body}
             loaded_functions[self.pk] = func
         return func["function"]
 

@@ -3,6 +3,7 @@ import operator
 from functools import reduce
 
 from django.apps import AppConfig
+from django.core import checks
 from django.db.utils import OperationalError, ProgrammingError
 
 LOGGER = logging.getLogger(__name__)
@@ -10,18 +11,11 @@ LOGGER = logging.getLogger(__name__)
 
 class RiverApp(AppConfig):
     name = 'river'
-    default_auto_field = 'django.db.models.AutoField'
     label = 'river'
+    default_auto_field = 'django.db.models.AutoField'
 
     def ready(self):
-
-        for field_name in self._get_all_workflow_fields():
-            try:
-                workflows = self.get_model('Workflow').objects.filter(field_name=field_name)
-                if workflows.count() == 0:
-                    LOGGER.warning("%s field doesn't seem have any workflow defined in database. You should create its workflow" % field_name)
-            except (OperationalError, ProgrammingError):
-                pass
+        checks.register(check_workflow_definitions, checks.Tags.database)
 
         from river.config import app_config
 
@@ -59,3 +53,21 @@ class RiverApp(AppConfig):
                 admin.site._registry[model] = registered_admin
         else:
             admin.site.register(model, DefaultWorkflowModelAdmin)
+
+
+def check_workflow_definitions(app_configs, **kwargs):
+    from river.models import Workflow
+
+    warnings = []
+    try:
+        for field_name in RiverApp._get_all_workflow_fields():
+            if not Workflow.objects.filter(field_name=field_name).exists():
+                warnings.append(checks.Warning(
+                    "%s field doesn't seem to have any workflow defined in the database. "
+                    "You should create its workflow." % field_name,
+                    obj='river',
+                    id='river.W001',
+                ))
+    except (OperationalError, ProgrammingError):
+        pass
+    return warnings

@@ -21,7 +21,8 @@ class RiverConfig(object):
                 'USER_CLASS': settings.AUTH_USER_MODEL,
                 'PERMISSION_CLASS': Permission,
                 'GROUP_CLASS': Group,
-                'INJECT_MODEL_ADMIN': False
+                'INJECT_MODEL_ADMIN': False,
+                'STRICT_HOOKS': False
             }
             river_settings = {}
             for key, default in allowed_configurations.items():

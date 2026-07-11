@@ -5,7 +5,7 @@ import pyodbc
 
 from .base import *
 
-DB_DRIVER = 'ODBC Driver 17 for SQL Server'
+DB_DRIVER = os.environ.get('MSSQL_ODBC_DRIVER', 'ODBC Driver 18 for SQL Server')
 DB_HOST = os.environ['MCR_MICROSOFT_COM_MSSQL_SERVER_HOST']
 DB_PORT = os.environ['MCR_MICROSOFT_COM_MSSQL_SERVER_1433_TCP']
 DB_USER = 'sa'
@@ -23,7 +23,7 @@ cursor.execute(
 
 DATABASES = {
     'default': {
-        'ENGINE': 'sql_server.pyodbc',
+        'ENGINE': 'mssql',
         'NAME': 'river',
         'USER': DB_USER,
         'PASSWORD': DB_PASSWORD,
@@ -33,7 +33,8 @@ DATABASES = {
             'NAME': 'river' + str(uuid4()),
         },
         'OPTIONS': {
-            'driver': DB_DRIVER
+            'driver': DB_DRIVER,
+            'extra_params': 'TrustServerCertificate=yes',
         },
     }
 }

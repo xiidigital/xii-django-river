@@ -27,6 +27,7 @@ setup(
     ],
     extras_require={
         "codemirror": ["django-codemirror2"],
+        "mssql": ["mssql-django>=1.4", "pyodbc"],
     },
     include_package_data=True,
     zip_safe=False,

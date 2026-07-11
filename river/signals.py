@@ -44,6 +44,13 @@ class TransitionSignal(object):
             ):
                 hook.execute(self._get_context(BEFORE))
 
+            pre_transition.send(
+                sender=self.workflow_object.__class__,
+                workflow_object=self.workflow_object,
+                field_name=self.field_name,
+                source_state=self.transition_approval.transition.source_state,
+                destination_state=self.transition_approval.transition.destination_state,
+            )
             LOGGER.debug("The signal that is fired right before the transition ( %s ) happened for %s"
                          % (self.transition_approval.transition, self.workflow_object))
 
@@ -59,6 +66,14 @@ class TransitionSignal(object):
                     )
             ):
                 hook.execute(self._get_context(AFTER))
+            if type is None:
+                post_transition.send(
+                    sender=self.workflow_object.__class__,
+                    workflow_object=self.workflow_object,
+                    field_name=self.field_name,
+                    source_state=self.transition_approval.transition.source_state,
+                    destination_state=self.transition_approval.transition.destination_state,
+                )
             LOGGER.debug("The signal that is fired right after the transition ( %s) happened for %s"
                          % (self.transition_approval.transition, self.workflow_object))
 
@@ -96,6 +111,12 @@ class ApproveSignal(object):
         ):
             hook.execute(self._get_context(BEFORE))
 
+        pre_approve.send(
+            sender=self.workflow_object.__class__,
+            workflow_object=self.workflow_object,
+            field_name=self.field_name,
+            transition_approval=self.transition_approval,
+        )
         LOGGER.debug("The signal that is fired right before a transition approval is approved for %s due to transition %s -> %s" % (
             self.workflow_object, self.transition_approval.transition.source_state.label, self.transition_approval.transition.destination_state.label))
 
@@ -110,6 +131,14 @@ class ApproveSignal(object):
                 )
         ):
             hook.execute(self._get_context(AFTER))
+        if type is None:
+            post_approve.send(
+                sender=self.workflow_object.__class__,
+                workflow_object=self.workflow_object,
+                field_name=self.field_name,
+                transition_approval=self.transition_approval,
+                transition_approval_meta=self.transition_approval.meta,
+            )
         LOGGER.debug("The signal that is fired right after a transition approval is approved for %s due to transition %s -> %s" % (
             self.workflow_object, self.transition_approval.transition.source_state.label, self.transition_approval.transition.destination_state.label))
 
@@ -146,6 +175,11 @@ class OnCompleteSignal(object):
                     )
             ):
                 hook.execute(self._get_context(BEFORE))
+            pre_on_complete.send(
+                sender=self.workflow_object.__class__,
+                workflow_object=self.workflow_object,
+                field_name=self.field_name,
+            )
             LOGGER.debug("The signal that is fired right before the workflow of %s is complete" % self.workflow_object)
 
     def __exit__(self, type, value, traceback):
@@ -158,6 +192,12 @@ class OnCompleteSignal(object):
                     )
             ):
                 hook.execute(self._get_context(AFTER))
+            if type is None:
+                post_on_complete.send(
+                    sender=self.workflow_object.__class__,
+                    workflow_object=self.workflow_object,
+                    field_name=self.field_name,
+                )
             LOGGER.debug("The signal that is fired right after the workflow of %s is complete" % self.workflow_object)
 
     def _get_context(self, when):

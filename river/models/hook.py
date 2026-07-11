@@ -5,6 +5,7 @@ from django.db import models
 from django.db.models import PROTECT
 from django.utils.translation import gettext_lazy as _
 
+from river.config import app_config
 from river.models import Workflow, GenericForeignKey, BaseModel
 from river.models.function import Function
 
@@ -36,4 +37,6 @@ class Hook(BaseModel):
         try:
             self.callback_function.get()(context)
         except Exception as e:
+            if app_config.STRICT_HOOKS:
+                raise
             LOGGER.exception(e)
