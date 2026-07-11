@@ -11,5 +11,4 @@ INSTALLED_APPS += (
     'river.tests',
 )
 
-if django.get_version() >= '1.9.0':
-    MIGRATION_MODULES = DisableMigrations()
+MIGRATION_MODULES = DisableMigrations()

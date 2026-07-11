@@ -1,7 +1,6 @@
 import logging
 
 from django.db.models import CASCADE, PROTECT, SET_NULL
-from mptt.fields import TreeOneToOneField
 
 from river.models import TransitionApprovalMeta, Workflow
 from river.models.transition import Transition
@@ -12,7 +11,7 @@ except ImportError:
     from django.contrib.contenttypes.generic import GenericForeignKey
 
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from river.models.base_model import BaseModel
 from river.models.managers.transitionapproval import TransitionApprovalManager
@@ -60,7 +59,7 @@ class TransitionApproval(BaseModel):
     groups = models.ManyToManyField(app_config.GROUP_CLASS, verbose_name=_('Groups'))
     priority = models.IntegerField(default=0, verbose_name=_('Priority'))
 
-    previous = TreeOneToOneField("self", verbose_name=_('Previous Transition'), related_name="next_transition", null=True, blank=True, on_delete=CASCADE)
+    previous = models.OneToOneField("self", verbose_name=_('Previous Transition'), related_name="next_transition", null=True, blank=True, on_delete=CASCADE)
 
     @property
     def peers(self):

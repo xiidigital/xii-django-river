@@ -1,6 +1,6 @@
 import logging
 
-import six
+from functools import reduce
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.db.models import Q, Max
@@ -218,7 +218,7 @@ class InstanceWorkflowObject(object):
 
         return Transition.objects.filter(
             Q(workflow=self.workflow, object_id=self.workflow_object.pk) &
-            six.moves.reduce(lambda agg, q: q | agg, [Q(meta__id=meta_id, iteration=max_iteration) for meta_id, max_iteration in meta_max_iteration], Q(pk=-1))
+            reduce(lambda agg, q: q | agg, [Q(meta__id=meta_id, iteration=max_iteration) for meta_id, max_iteration in meta_max_iteration], Q(pk=-1))
         )
 
     def _re_create_cycled_path(self, done_transition):
@@ -255,7 +255,7 @@ class InstanceWorkflowObject(object):
             regenerated_transitions.add((old_transition.source_state, old_transition.destination_state))
 
             old_transitions = self._get_transition_images(old_transitions.values_list("destination_state__pk", flat=True)).exclude(
-                six.moves.reduce(lambda agg, q: q | agg, [Q(source_state=source_state, destination_state=destination_state) for source_state, destination_state in regenerated_transitions], Q(pk=-1))
+                reduce(lambda agg, q: q | agg, [Q(source_state=source_state, destination_state=destination_state) for source_state, destination_state in regenerated_transitions], Q(pk=-1))
             )
 
             iteration += 1

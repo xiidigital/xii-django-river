@@ -5,7 +5,6 @@ from unittest import skipUnless, skip
 from uuid import uuid4
 
 import django
-import six
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 from django.test.utils import override_settings
@@ -18,10 +17,7 @@ from river.models.hook import BEFORE
 from river.tests.models import BasicTestModel
 from river.tests.models.factories import BasicTestModelObjectFactory
 
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
+from io import StringIO
 
 from django.core.management import call_command
 from django.test import TestCase
@@ -216,7 +212,7 @@ class MigrationTests(TestCase):
 
         with connection.cursor() as cur:
             schema = cur.execute("PRAGMA table_info('river_transitionapproval');").fetchall()
-            columns = six.moves.map(lambda column: column[1], schema)
+            columns = map(lambda column: column[1], schema)
             assert_that(columns, is_not(has_item("iteration")))
 
         call_command('migrate', 'river', '0007', stdout=out)
@@ -346,7 +342,7 @@ class MigrationTests(TestCase):
 
         with connection.cursor() as cur:
             schema = cur.execute("PRAGMA table_info('river_transitionapproval');").fetchall()
-            columns = six.moves.map(lambda column: column[1], schema)
+            columns = map(lambda column: column[1], schema)
             assert_that(columns, is_not(has_item("iteration")))
 
         call_command('migrate', 'river', '0007', stdout=out)
@@ -561,7 +557,7 @@ class MigrationTests(TestCase):
 
         with connection.cursor() as cur:
             schema = cur.execute("PRAGMA table_info('river_transitionapproval');").fetchall()
-            columns = six.moves.map(lambda column: column[1], schema)
+            columns = map(lambda column: column[1], schema)
             assert_that(columns, is_not(has_item("iteration")))
 
         call_command('migrate', 'river', '0007', stdout=out)
@@ -655,7 +651,7 @@ class MigrationTests(TestCase):
 
         with connection.cursor() as cur:
             schema = cur.execute("PRAGMA table_info('river_transitionapprovalmeta');").fetchall()
-            columns = six.moves.map(lambda column: column[1], schema)
+            columns = map(lambda column: column[1], schema)
             assert_that(columns, has_item("transition_meta_id"))
             assert_that(columns, is_not(has_item("source_state_id")))
             assert_that(columns, is_not(has_item("destination_state_id")))

@@ -14,8 +14,8 @@ from rivertest.flowbuilder import FlowBuilder, AuthorizationPolicyBuilder, RawSt
 
 class InstanceApiTest(TestCase):
 
-    def __init__(self, *args, **kwargs):
-        super(InstanceApiTest, self).__init__(*args, **kwargs)
+    def setUp(self):
+        super().setUp()
         self.content_type = ContentType.objects.get_for_model(BasicTestModel)
 
     def test_shouldNotReturnOtherObjectsApprovalsForTheAuthorizedUser(self):

@@ -13,21 +13,37 @@ except IOError as err:
 
 setup(
     name='django-river',
-    version='3.3.0',
+    version='4.0.0',
     author='Ahmet DAL',
     author_email='ceahmetdal@gmail.com',
-    packages=find_packages(),
+    packages=find_packages(exclude=['river.tests', 'river.tests.*']),
     url='https://github.com/javrasya/django-river.git',
     description='Django Workflow Library',
     long_description=long_description,
+    python_requires='>=3.10',
     install_requires=[
-        "Django",
-        "django-mptt==0.9.1",
-        "django-cte==1.1.4",
-        "django-codemirror2==0.2"
+        "Django>=4.2",
+        "django-cte>=3.0",
     ],
+    extras_require={
+        "codemirror": ["django-codemirror2"],
+    },
     include_package_data=True,
     zip_safe=False,
     license='BSD',
     platforms=['any'],
+    classifiers=[
+        'Framework :: Django',
+        'Framework :: Django :: 4.2',
+        'Framework :: Django :: 5.0',
+        'Framework :: Django :: 5.1',
+        'Framework :: Django :: 5.2',
+        'Framework :: Django :: 6.0',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
+        'Programming Language :: Python :: 3.13',
+        'License :: OSI Approved :: BSD License',
+    ],
 )

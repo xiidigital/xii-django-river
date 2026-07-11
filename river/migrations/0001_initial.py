@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
-import mptt.fields
 
 
 class Migration(migrations.Migration):
@@ -192,7 +191,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='transitionapproval',
             name='previous',
-            field=mptt.fields.TreeOneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='next_transition', to='river.TransitionApproval', verbose_name='Previous Transition'),
+            field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='next_transition', to='river.TransitionApproval', verbose_name='Previous Transition'),
         ),
         migrations.AddField(
             model_name='transitionapproval',

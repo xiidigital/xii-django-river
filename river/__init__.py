@@ -1,1 +1,1 @@
-default_app_config = 'river.apps.RiverApp'
+__version__ = "4.0.0"

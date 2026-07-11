@@ -1,12 +1,18 @@
-from codemirror2.widgets import CodeMirrorEditor
 from django import forms
 from django.contrib import admin
 
 from river.models import Function
 
+try:
+    from codemirror2.widgets import CodeMirrorEditor
+
+    BODY_WIDGET = CodeMirrorEditor(options={'mode': 'python'})
+except ImportError:
+    BODY_WIDGET = forms.Textarea(attrs={'rows': 20, 'style': 'font-family: monospace; width: 90%;'})
+
 
 class FunctionForm(forms.ModelForm):
-    body = forms.CharField(widget=CodeMirrorEditor(options={'mode': 'python'}))
+    body = forms.CharField(widget=BODY_WIDGET)
 
     class Meta:
         model = Function

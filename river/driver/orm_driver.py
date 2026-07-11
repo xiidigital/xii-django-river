@@ -1,7 +1,7 @@
 from django.contrib import auth
 from django.db.models import Min, CharField, Q, F
 from django.db.models.functions import Cast
-from django_cte import With
+from django_cte import CTE
 
 from river.driver.river_driver import RiverDriver
 from river.models import TransitionApproval, PENDING
@@ -10,7 +10,7 @@ from river.models import TransitionApproval, PENDING
 class OrmDriver(RiverDriver):
 
     def get_available_approvals(self, as_user):
-        those_with_max_priority = With(
+        those_with_max_priority = CTE(
             TransitionApproval.objects.filter(
                 workflow=self.workflow, status=PENDING
             ).values(
@@ -18,16 +18,16 @@ class OrmDriver(RiverDriver):
             ).annotate(min_priority=Min('priority'))
         )
 
-        workflow_objects = With(
+        workflow_objects = CTE(
             self.wokflow_object_class.objects.all(),
             name="workflow_object"
         )
 
         approvals_with_max_priority = those_with_max_priority.join(
             self._authorized_approvals(as_user),
-            workflow_id=those_with_max_priority.col.workflow_id,
+            workflow_id=those_with_max_priority.col.workflow,
             object_id=those_with_max_priority.col.object_id,
-            transition_id=those_with_max_priority.col.transition_id,
+            transition_id=those_with_max_priority.col.transition,
         ).with_cte(
             those_with_max_priority
         ).annotate(

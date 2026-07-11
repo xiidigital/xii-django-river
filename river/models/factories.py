@@ -1,7 +1,7 @@
 import factory
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
-from factory import DjangoModelFactory
+from factory.django import DjangoModelFactory
 
 from river.models import Workflow, TransitionMeta
 from river.models.state import State
@@ -15,7 +15,7 @@ class ContentTypeObjectFactory(DjangoModelFactory):
     model = factory.Sequence(lambda n: 'ect_model_%s' % n)
 
 
-class UserObjectFactory(factory.DjangoModelFactory):
+class UserObjectFactory(DjangoModelFactory):
     class Meta:
         model = get_user_model()
 
@@ -44,7 +44,7 @@ class UserObjectFactory(factory.DjangoModelFactory):
                 self.groups.add(group)
 
 
-class GroupObjectFactory(factory.DjangoModelFactory):
+class GroupObjectFactory(DjangoModelFactory):
     class Meta:
         model = 'auth.Group'
 
@@ -62,7 +62,7 @@ class GroupObjectFactory(factory.DjangoModelFactory):
                 self.permissions.add(permission)
 
 
-class PermissionObjectFactory(factory.DjangoModelFactory):
+class PermissionObjectFactory(DjangoModelFactory):
     class Meta:
         model = 'auth.Permission'
 

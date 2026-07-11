@@ -1,7 +1,6 @@
 import os
 from os.path import dirname
 
-import six
 from django.db import connection
 from django.contrib.auth.models import Permission
 
@@ -34,11 +33,11 @@ class MsSqlDriver(RiverDriver):
     @staticmethod
     def _permission_ids_str(as_user):
         permissions = as_user.user_permissions.all() | Permission.objects.filter(group__user=as_user)
-        return ",".join(list(six.moves.map(str, permissions.values_list("pk", flat=True))) or ["-1"])
+        return ",".join(list(map(str, permissions.values_list("pk", flat=True))) or ["-1"])
 
     @staticmethod
     def _group_ids_str(as_user):
-        return ",".join(list(six.moves.map(str, as_user.groups.all().values_list("pk", flat=True))) or ["-1"])
+        return ",".join(list(map(str, as_user.groups.all().values_list("pk", flat=True))) or ["-1"])
 
     @property
     def _clean_sql(self):
