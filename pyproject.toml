@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "django-river"
+version = "4.0.0"
+description = "Django Workflow Library"
+readme = "README.rst"
+license = { text = "BSD" }
+authors = [{ name = "Ahmet DAL", email = "ceahmetdal@gmail.com" }]
+requires-python = ">=3.10"
+dependencies = [
+    "Django>=4.2",
+    "django-cte>=3.0",
+]
+classifiers = [
+    "Framework :: Django",
+    "Framework :: Django :: 4.2",
+    "Framework :: Django :: 5.0",
+    "Framework :: Django :: 5.1",
+    "Framework :: Django :: 5.2",
+    "Framework :: Django :: 6.0",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "License :: OSI Approved :: BSD License",
+]
+
+[project.urls]
+Homepage = "https://github.com/javrasya/django-river"
+
+[project.optional-dependencies]
+codemirror = ["django-codemirror2"]
+mssql = ["mssql-django>=1.4", "pyodbc"]
+sandbox = ["RestrictedPython>=6.0"]
+
+[tool.setuptools.packages.find]
+include = ["river*"]
+exclude = ["river.tests*"]
+
+[tool.setuptools.package-data]
+river = ["sql/mssql/*.sql"]
