@@ -79,7 +79,7 @@ destination states. If the source state is not provided, ``django-river`` will p
 +-------------------+--------+----------------+----------+--------------------------+------------------------------------------+
 
 recent_approval
--------------
+----------------
 
 This is a property that the transition approval which has recently been approved for the model object.
 

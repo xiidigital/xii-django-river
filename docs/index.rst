@@ -72,6 +72,7 @@ Contents
    api/index
    authorization
    hooking/index
+   security
    faq
    migration/index
    changelog

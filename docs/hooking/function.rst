@@ -32,6 +32,107 @@ Here is an example function;
 
 |Create Function Page|
 
+.. _hooking_function_security_gates:
+
+Before it runs: three gates (fork-specific)
+--------------------------------------------
+
+``Function.body`` is stored as text and executed with ``exec()`` (or, with
+the sandbox described below, with ``RestrictedPython``). That means
+**anyone who can write to the Function table can run arbitrary Python in
+your application's process.** This fork adds three independent gates in
+front of that, all off/strict by default so nothing runs by accident:
+
+1. ``RIVER_ALLOW_DB_FUNCTIONS`` (setting, default ``False``) — a
+   deployment-wide switch. ``Function.get()`` refuses to execute anything
+   at all unless this is explicitly set to ``True``. It exists so that
+   using DB-stored hooks is a conscious choice by whoever configures the
+   project, not a silent default.
+2. ``Function.is_approved`` (model field, default ``False``) — a
+   per-``Function`` review gate, independent of the setting above. Editing
+   a ``Function``'s ``body`` resets ``is_approved`` to ``False``: a
+   reviewer has to sign off on the *new* code, not the old one.
+3. ``Hook.save()`` validation — attaching a ``Hook`` to a ``Function`` that
+   isn't approved raises ``ValidationError`` immediately, whether you're
+   using the admin, a data migration, or plain ORM code. A misconfigured
+   hook is rejected when you configure it, not discovered later at
+   runtime.
+
+.. code:: python
+
+    # settings.py
+    RIVER_ALLOW_DB_FUNCTIONS = True  # opt in explicitly
+
+Approving a ``Function``
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Two Django permissions control who can move a ``Function`` from
+"pending" to "approved":
+
+* ``river.approve_function`` — required to use the "Approve selected
+  functions" action on the ``Function`` admin page at all.
+* ``river.self_approve_function`` — required, *in addition to the above*,
+  for the same person who last edited a ``Function`` to approve their own
+  change. Without it, approving your own edit raises
+  ``ImproperlyConfigured``.
+
+Which of these to grant, and to whom, depends on who is trusted to author
+hooks in your deployment — see :ref:`security_guide` for a full
+discussion of the trade-offs (single trusted team vs. a platform operator
+reviewing tenant-authored hooks vs. fully autonomous tenants with no
+external reviewer at all).
+
+Programmatic approval is available through the model API too:
+
+.. code:: python
+
+    function.approve(reviewer_user)
+    # or, when the author is explicitly allowed to sign off on their own work:
+    function.approve(author_user, allow_self_approval=True)
+
+Every creation, edit, and approval of a ``Function`` is written to an
+immutable ``FunctionRevision`` row — a diff against the previous body,
+who changed it, when, and (for approvals) whether it was a normal approval
+or a self-approval. This is visible as a read-only inline on the
+``Function`` admin page; nobody, including superusers, can edit or delete
+past revisions from the UI.
+
+Functions registered from code
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``river.models.function.create_function(callback)`` registers a plain
+Python function *defined in your codebase* as a ``Function`` row (this is
+how you satisfy ``Hook.callback_function``'s mandatory foreign key without
+hand-typing code into the admin). Since that body already went through
+your normal code review process (a pull request, CI, etc.), there's
+nothing left for a ``Function``-level reviewer to sign off on — rows
+created this way are approved automatically.
+
+Optional sandbox: ``RIVER_SANDBOX_DB_FUNCTIONS``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+By default, an approved ``Function`` still runs with plain ``exec()`` —
+full access to whatever the Python process can reach. Setting
+``RIVER_SANDBOX_DB_FUNCTIONS = True`` (requires
+``pip install django-river[sandbox]``) compiles the body through
+`RestrictedPython <https://restrictedpython.readthedocs.io/>`_ instead:
+
+* ``import`` statements don't resolve (no ``__import__`` in the restricted
+  builtins) — they fail with an error the moment ``handle`` actually tries
+  to import something.
+* Dunder attribute access (the classic
+  ``().__class__.__bases__[0].__subclasses__()`` sandbox escape) is
+  rejected at *compile* time, before the code can even run.
+* ``__builtins__`` is replaced with RestrictedPython's ``safe_builtins``
+  — no ``open``, ``eval``, ``exec``, or ``compile`` available to the body.
+
+This is opt-in and **not fully backward compatible**: bodies that rely on
+``import`` or on reaching anything outside the ``context`` argument will
+need rewriting. It is also not a complete sandbox — see
+:ref:`security_guide` for what it does and does not cover (no CPU/memory/
+time limits, and objects you choose to expose via ``context`` are still
+reachable with their full attribute surface).
+
 Context Parameter
 -----------------
 

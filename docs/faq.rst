@@ -39,7 +39,7 @@ workflows (what we call that it supports on-the-fly changes) where as ``viewflow
 is one of those that works with statically defined workflows in the code.
 
 What are the differences between ``django-river`` and ``django-fsm``?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 There are different kind of workflow libraries for ``django``. It can be
 working either with dynamically defined workflows or with statically defined
@@ -136,10 +136,30 @@ Can I modify a the source code of the function that is used in the hooks on-the-
 The answer has ben yes since ``django-river`` version ``3.0.0``. ``django-river`` also
 comes with an input component on the admin page that supports basic code highlighting.
 
+(Fork-specific) It has to be gated, though: this changes the source code
+that ``exec()`` runs, so you also need ``RIVER_ALLOW_DB_FUNCTIONS = True``
+in your settings, and the edited ``Function`` needs to be (re-)approved
+before it runs again — see the next question and
+:ref:`hooking_function_security_gates`.
+
+Why did my hook stop firing right after I edited its Function?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+(Fork-specific) Editing a ``Function``'s ``body`` resets its
+``is_approved`` flag to ``False`` — a reviewer has to sign off on the new
+code before it can run again, it doesn't inherit the previous approval.
+Approve it again (with someone other than the last editor, unless they
+hold ``river.self_approve_function``) and it will resume firing. See
+:ref:`security_guide`.
+
 Is there any delay for functions updates?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-There is none. It is applied immediately.
+The edit itself is applied immediately — there's no caching delay on the
+stored ``body``. (Fork-specific) Whether the *new* code is allowed to
+*run* immediately is a separate question: if the edit reset
+``is_approved`` to ``False`` (see above), the new code won't execute until
+it's approved again, regardless of how quickly it was saved.
 
 Can I use ``django-river`` with ``sqlalchemy``?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
