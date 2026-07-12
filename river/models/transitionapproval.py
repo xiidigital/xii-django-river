@@ -5,10 +5,7 @@ from django.db.models import CASCADE, PROTECT, SET_NULL
 from river.models import TransitionApprovalMeta, Workflow
 from river.models.transition import Transition
 
-try:
-    from django.contrib.contenttypes.fields import GenericForeignKey
-except ImportError:
-    from django.contrib.contenttypes.generic import GenericForeignKey
+from django.contrib.contenttypes.fields import GenericForeignKey
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -37,12 +34,15 @@ class TransitionApproval(BaseModel):
         app_label = 'river'
         verbose_name = _("Transition Approval")
         verbose_name_plural = _("Transition Approvals")
+        indexes = [
+            models.Index(fields=["content_type", "object_id"], name="river_ta_ct_obj_idx"),
+        ]
 
     objects = TransitionApprovalManager()
 
     content_type = models.ForeignKey(app_config.CONTENT_TYPE_CLASS, verbose_name=_('Content Type'), on_delete=CASCADE)
 
-    object_id = models.CharField(max_length=50, verbose_name=_('Related Object'))
+    object_id = models.CharField(max_length=200, verbose_name=_('Related Object'))
     workflow_object = GenericForeignKey('content_type', 'object_id')
 
     meta = models.ForeignKey(TransitionApprovalMeta, verbose_name=_('Meta'), related_name="transition_approvals", null=True, blank=True, on_delete=SET_NULL)

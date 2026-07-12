@@ -67,6 +67,7 @@ SECRET_KEY = 'abcde12345'
 
 ROOT_URLCONF = 'test_urls'
 RIVER_INJECT_MODEL_ADMIN = True
+RIVER_ALLOW_DB_FUNCTIONS = True
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,

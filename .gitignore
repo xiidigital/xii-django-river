@@ -19,3 +19,6 @@ dist
 build
 venv*
 .vscode/settings.json
+
+.idea/
+db.sqlite3

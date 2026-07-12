@@ -8,7 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from river.config import app_config
 from river.models import Workflow
 from river.models.base_model import BaseModel
-from river.models.managers.transitionmetada import TransitionApprovalMetadataManager
+from river.models.managers.transitionapprovalmeta import TransitionApprovalMetadataManager
 from river.models.transitionmeta import TransitionMeta
 
 

@@ -26,16 +26,6 @@ class State(BaseModel):
     def natural_key(self):
         return self.slug,
 
-    def details(self):
-        detail = super(State, self).details()
-        detail.update(
-            {
-                'label': self.label,
-                'description': self.description
-            }
-        )
-        return detail
-
 
 def on_pre_save(sender, instance, *args, **kwargs):
     if not instance.slug:

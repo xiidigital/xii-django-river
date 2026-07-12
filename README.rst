@@ -74,12 +74,45 @@ A very modern admin with some user friendly interfaces that is called `River Adm
 
 .. _`River Admin`: https://riveradminproject.com/
 
-Requirements
-------------
-* Python (``3.5`` (for Django ``2.2`` only), ``3.6``, ``3.7``, ``3.8``)
-* Django (``2.2``, ``3.0``, ``3.1``)
-* ``Django`` = 2.2 is supported for ``Python`` >= 3.5
-* ``Django`` >= 3.0 is supported for ``Python`` >= 3.6
+Requirements (this fork)
+------------------------
+* Python (``3.10``, ``3.11``, ``3.12``, ``3.13``)
+* Django (``4.2``, ``5.0``, ``5.1``, ``5.2``, ``6.0``)
+* ``Django`` >= 6.0 requires ``Python`` >= 3.12
+
+Fork notes
+----------
+This fork modernizes django-river 3.3.0 for current Django. Highlights:
+
+* ``django-mptt`` dependency removed (it was never actually used as a tree).
+* ``django-cte`` >= 3.0; ``django-codemirror2`` is now optional
+  (``pip install django-river[codemirror]``).
+* SQL Server support runs on ``mssql-django``
+  (``pip install django-river[mssql]``) with a fully parametrized query.
+* The public signals (``pre_approve``, ``post_approve``, ``pre_transition``,
+  ``post_transition``, ``pre_on_complete``, ``post_on_complete``) are now
+  actually emitted. ``post_*`` signals fire in reverse nesting order
+  (on-complete, transition, approve) and only when no exception occurred.
+* New settings:
+
+  - ``RIVER_ALLOW_DB_FUNCTIONS`` (default ``False``): hooks execute Python
+    code stored in the ``Function`` model via ``exec``. You must opt in
+    explicitly, since anyone with admin access to ``Function`` can run
+    arbitrary code.
+  - ``RIVER_STRICT_HOOKS`` (default ``False``): when ``True``, exceptions
+    raised by hooks propagate instead of being swallowed and logged.
+  - ``RIVER_SANDBOX_DB_FUNCTIONS`` (default ``False``): compiles
+    ``Function`` bodies through RestrictedPython instead of plain
+    ``exec()`` (``pip install django-river[sandbox]``).
+* ``river.Function`` now supports a review workflow: ``is_approved``,
+  the ``river.approve_function`` / ``river.self_approve_function``
+  permissions, and an immutable ``FunctionRevision`` audit trail with
+  diffs and a username snapshot (survives account deletion).
+  ``Hook.save()`` refuses to attach a ``Hook`` to an unapproved
+  ``Function``. See `SECURITY.md`_ for the full threat model and what is
+  (and isn't) covered by this fork's mitigations.
+
+.. _`SECURITY.md`: SECURITY.md
 
 Supported (Tested) Databases:
 -----------------------------

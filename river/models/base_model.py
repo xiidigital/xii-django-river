@@ -17,6 +17,3 @@ class BaseModel(models.Model):
     class Meta:
         app_label = 'river'
         abstract = True
-
-    def details(self):
-        return {'pk': self.pk}

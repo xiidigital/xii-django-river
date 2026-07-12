@@ -8,10 +8,7 @@ from river.core.riverobject import RiverObject
 from river.core.workflowregistry import workflow_registry
 from river.models import OnApprovedHook, OnTransitHook, OnCompleteHook
 
-try:
-    from django.contrib.contenttypes.fields import GenericRelation
-except ImportError:
-    from django.contrib.contenttypes.generic import GenericRelation
+from django.contrib.contenttypes.fields import GenericRelation
 
 from river.models.state import State
 from river.models.transitionapproval import TransitionApproval
@@ -51,12 +48,12 @@ class StateField(models.ForeignKey):
                            GenericRelation('%s.%s' % (TransitionApproval._meta.app_label, TransitionApproval._meta.object_name)))
         self._add_to_class(cls, self.field_name + "_transitions", GenericRelation('%s.%s' % (Transition._meta.app_label, Transition._meta.object_name)))
 
-        if id(cls) not in workflow_registry.workflows:
+        if cls not in workflow_registry.workflows:
             self._add_to_class(cls, "river", river)
 
         super(StateField, self).contribute_to_class(cls, name, *args, **kwargs)
 
-        if id(cls) not in workflow_registry.workflows:
+        if cls not in workflow_registry.workflows:
             post_save.connect(_on_workflow_object_saved, self.model, False, dispatch_uid='%s_%s_riverstatefield_post' % (self.model, name))
             post_delete.connect(_on_workflow_object_deleted, self.model, False, dispatch_uid='%s_%s_riverstatefield_post' % (self.model, name))
 

@@ -39,7 +39,7 @@ class MsSqlDriver(RiverDriver):
         group_ids = self._group_ids(as_user)
 
         quote = connection.ops.quote_name
-        opts = self.wokflow_object_class._meta
+        opts = self.workflow_object_class._meta
         transitionapproval_meta = TransitionApproval._meta
 
         sql = self._get_sql_template().format(

@@ -4,16 +4,13 @@ from django.db.models import CASCADE, PROTECT
 
 from river.models import State, Workflow, TransitionMeta
 
-try:
-    from django.contrib.contenttypes.fields import GenericForeignKey
-except ImportError:
-    from django.contrib.contenttypes.generic import GenericForeignKey
+from django.contrib.contenttypes.fields import GenericForeignKey
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from river.models.base_model import BaseModel
-from river.models.managers.transitionapproval import TransitionApprovalManager
+from river.models.managers.transition import TransitionManager
 from river.config import app_config
 
 PENDING = "pending"
@@ -36,10 +33,13 @@ class Transition(BaseModel):
         app_label = 'river'
         verbose_name = _("Transition")
         verbose_name_plural = _("Transitions")
+        indexes = [
+            models.Index(fields=["content_type", "object_id"], name="river_transition_ct_obj_idx"),
+        ]
 
-    objects = TransitionApprovalManager()
+    objects = TransitionManager()
     content_type = models.ForeignKey(app_config.CONTENT_TYPE_CLASS, verbose_name=_('Content Type'), on_delete=CASCADE)
-    object_id = models.CharField(max_length=50, verbose_name=_('Related Object'))
+    object_id = models.CharField(max_length=200, verbose_name=_('Related Object'))
     workflow_object = GenericForeignKey('content_type', 'object_id')
 
     meta = models.ForeignKey(TransitionMeta, verbose_name=_('Meta'), related_name="transitions", on_delete=PROTECT)

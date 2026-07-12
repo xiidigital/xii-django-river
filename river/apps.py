@@ -33,12 +33,12 @@ class RiverApp(AppConfig):
     @classmethod
     def _get_all_workflow_classes(cls):
         from river.core.workflowregistry import workflow_registry
-        return list(workflow_registry.class_index.values())
+        return workflow_registry.registered_classes
 
     @classmethod
     def _get_workflow_class_fields(cls, model):
         from river.core.workflowregistry import workflow_registry
-        return workflow_registry.workflows[id(model)]
+        return workflow_registry.get_class_fields(model)
 
     def _register_hook_inlines(self, model):  # pylint: disable=no-self-use
         from django.contrib import admin

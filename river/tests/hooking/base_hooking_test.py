@@ -22,7 +22,9 @@ class BaseHookingTest(TestCase):
 
     def setUp(self):
         self.identifier = str(uuid4())
-        self.callback_function = Function.objects.create(name=uuid4(), body=callback_method % self.identifier)
+        self.callback_function = Function.objects.create(
+            name=uuid4(), body=callback_method % self.identifier, is_approved=True
+        )
 
     def get_output(self):
         return callback_output.get(self.identifier, None)

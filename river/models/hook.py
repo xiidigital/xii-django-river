@@ -1,12 +1,15 @@
 import logging
 
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import PROTECT
 from django.utils.translation import gettext_lazy as _
 
 from river.config import app_config
-from river.models import Workflow, GenericForeignKey, BaseModel
+from django.contrib.contenttypes.fields import GenericForeignKey
+
+from river.models import Workflow, BaseModel
 from river.models.function import Function
 
 BEFORE = "BEFORE"
@@ -32,6 +35,30 @@ class Hook(BaseModel):
     workflow_object = GenericForeignKey('content_type', 'object_id')
 
     hook_type = models.CharField(_('When?'), choices=HOOK_TYPES, max_length=50)
+
+    def clean(self):
+        super().clean()
+        self._validate_callback_function_is_approved()
+
+    def save(self, *args, **kwargs):
+        # Reject at configuration time, not at execution time: a Hook
+        # wired to an unapproved Function would otherwise fail silently
+        # at runtime (see Hook.execute / RIVER_STRICT_HOOKS), which hides
+        # a misconfiguration behind "nothing happened". Enforced in save()
+        # (not just clean()) so this holds regardless of entry point —
+        # admin, a data migration, or plain ORM code.
+        self._validate_callback_function_is_approved()
+        super().save(*args, **kwargs)
+
+    def _validate_callback_function_is_approved(self):
+        if self.callback_function_id and not self.callback_function.is_approved:
+            raise ValidationError(
+                {"callback_function": _(
+                    "This Function hasn't been approved yet. Approve it "
+                    "(river.approve_function / river.self_approve_function) "
+                    "before wiring it into a workflow hook."
+                )}
+            )
 
     def execute(self, context):
         try:

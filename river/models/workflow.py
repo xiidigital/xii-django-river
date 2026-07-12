@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 
 from river.config import app_config
 from river.models import BaseModel, State
-from river.models.managers.workflowmetada import WorkflowManager
+from river.models.managers.workflow import WorkflowManager
 
 
 class Workflow(BaseModel):
