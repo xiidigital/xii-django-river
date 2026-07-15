@@ -35,10 +35,17 @@ class WorkflowForm(forms.ModelForm):
         super(WorkflowForm, self).__init__(*args, **kwargs)
 
     def clean_workflow(self):
-        if self.cleaned_data.get('workflow') == '' or ' ' not in self.cleaned_data.get('workflow'):
-            return None, None
-        else:
-            return self.cleaned_data.get('workflow').split(" ")
+        # In practice this ChoiceField already rejects anything outside its
+        # generated "<content_type_pk> <field_name>" choices before this
+        # method ever runs, so the empty/no-space case below is normally
+        # unreachable. It's kept as a real validation error (rather than
+        # silently returning (None, None), which used to let `save()` crash
+        # confusingly with ContentType.DoesNotExist) as a defense-in-depth
+        # guard in case the choices format ever changes.
+        value = self.cleaned_data.get('workflow')
+        if not value or ' ' not in value:
+            raise forms.ValidationError("Select a valid workflow/field combination.")
+        return value.split(" ")
 
     def save(self, *args, **kwargs):
         content_type_pk, field_name = self.cleaned_data.get('workflow')

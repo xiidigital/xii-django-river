@@ -106,7 +106,11 @@ def jump_workflow_object(context, workflow_object_identifier, state_label):
 def many_workflow_object(context, number):
     from xii.django_river.tests.models.factories import BasicTestModelObjectFactory
 
-    BasicTestModelObjectFactory.create_batch(250)
+    # Was hardcoded to 250 regardless of the parsed `number` (copy-paste
+    # from a slow-case benchmark script) - no .feature currently invokes
+    # this step, so it never surfaced, but it would silently ignore
+    # whatever count a scenario asked for.
+    BasicTestModelObjectFactory.create_batch(number)
 
 
 @when('available approvals are fetched with user {username:w}')
