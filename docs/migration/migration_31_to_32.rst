@@ -3,6 +3,10 @@
 3.1.X to 3.2.X
 ==============
 
+.. note::
+    This guide describes a migration path from the original upstream
+    ``django-river`` project, predating this fork.
+
 ``django-river`` started to support **Microsoft SQL Server 17 and 19** after version 3.2.0 but the previous migrations didn't get along with it. We needed to reset all
 the migrations to have fresh start. If you have already migrated to version `3.1.X` all you need to do is to pull your migrations back to the beginning.
 

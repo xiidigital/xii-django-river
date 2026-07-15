@@ -2,9 +2,9 @@ from collections import namedtuple
 
 from django.db import transaction
 
-from river.models import State, Workflow
-from river.models.factories import TransitionMetaFactory, TransitionApprovalMetaFactory
-from river.tests.models.factories import BasicTestModelObjectFactory
+from xii.django_river.models import State, Workflow
+from xii.django_river.models.factories import TransitionMetaFactory, TransitionApprovalMetaFactory
+from xii.django_river.tests.models.factories import BasicTestModelObjectFactory
 
 RawTransition = namedtuple("RawTransition", ["source_state", "destination_state", "authorization_policies"])
 RawState = namedtuple("RawState", ["label"])

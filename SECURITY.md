@@ -1,7 +1,7 @@
-# Security notes: `river.Function` and DB-stored hooks
+# Security notes: `xii_django_river.Function` and DB-stored hooks
 
-`river.Function` stores a Python function body as text in the database and
-runs it with `exec()` (`river/models/function.py`). This is a deliberate
+`xii_django_river.Function` stores a Python function body as text in the database and
+runs it with `exec()` (`xii/django_river/models/function.py`). This is a deliberate
 design feature — hooks can be changed without a deploy — but it means
 **anyone who can write to the `Function` table can execute arbitrary code
 in the same process as the rest of the application.** This document exists
@@ -18,7 +18,7 @@ threat model. Nothing here is specific to any one deployment.
 
 - **`RIVER_ALLOW_DB_FUNCTIONS`** (default `False`). `Function.get()` refuses
   to execute anything unless this is set. It exists so that adopting a
-  version of `river` with DB-stored hooks is an explicit, conscious choice
+  version of `xii-django-river` with DB-stored hooks is an explicit, conscious choice
   by whoever configures the project, not a silent default.
 
 - **Per-`Function` approval gate.** Independent of the setting above,
@@ -29,9 +29,9 @@ threat model. Nothing here is specific to any one deployment.
 
 - **Two separate permissions**, so "who can review" is configurable per
   deployment:
-  - `river.approve_function` — required to use the "Approve selected
+  - `xii_django_river.approve_function` — required to use the "Approve selected
     functions" admin action at all.
-  - `river.self_approve_function` — required, *in addition to the above*,
+  - `xii_django_river.self_approve_function` — required, *in addition to the above*,
     for the author of a `Function`'s last edit to approve their own change.
     Without it, `Function.approve()` raises `ImproperlyConfigured` when
     `approver == updated_by`.
@@ -77,7 +77,7 @@ threat model. Nothing here is specific to any one deployment.
   immediate, explicit configuration error.
 
 - **Optional execution sandbox (`RIVER_SANDBOX_DB_FUNCTIONS`, default
-  `False`)**. When enabled (`pip install django-river[sandbox]`),
+  `False`)**. When enabled (`pip install xii-django-river[sandbox]`),
   `Function` bodies compile through
   [RestrictedPython](https://restrictedpython.readthedocs.io/) instead of
   plain `exec()`: no `import` statements resolve (no `__import__` in the
@@ -85,7 +85,7 @@ threat model. Nothing here is specific to any one deployment.
   the classic `().__class__.__bases__[0].__subclasses__()` sandbox escape
   at the source level, before it would even run), and `__builtins__` is
   replaced with RestrictedPython's `safe_builtins` (no `open`, `eval`,
-  `exec`, `compile`, `__import__`). See `river/sandbox.py`. This is opt-in
+  `exec`, `compile`, `__import__`). See `xii/django_river/sandbox.py`. This is opt-in
   and not fully backward compatible — bodies that rely on `import` or on
   reaching things outside the `context` argument will need rewriting — see
   "What this still does NOT do" for what it doesn't cover even when on.
@@ -96,10 +96,10 @@ threat model. Nothing here is specific to any one deployment.
   later deleted, the FK goes `NULL` but the snapshot stays, so "who did
   this" remains answerable.
 
-Test coverage: `river/tests/test__function_gate.py`,
-`river/tests/test__function_approval.py`,
-`river/tests/test__hook_approval_gate.py`,
-`river/tests/test__function_sandbox.py`.
+Test coverage: `xii/django_river/tests/test__function_gate.py`,
+`xii/django_river/tests/test__function_approval.py`,
+`xii/django_river/tests/test__hook_approval_gate.py`,
+`xii/django_river/tests/test__function_sandbox.py`.
 
 ## What this still does NOT do (open, by design — see "Threat models")
 
@@ -128,25 +128,25 @@ Test coverage: `river/tests/test__function_gate.py`,
   Real cross-tenant containment requires either a Postgres role per tenant
   with grants scoped to that tenant's schema only, or never passing
   ORM/connection objects into `context` for sandboxed Functions at all. This
-  is infrastructure the consuming project owns, not something `river` can
+  is infrastructure the consuming project owns, not something `xii-django-river` can
   implement from inside the ORM — see "DB role isolation per tenant" below
   for concrete steps.
 
-- **No resource limits.** Enforce this outside `river` if it matters for
+- **No resource limits.** Enforce this outside `xii-django-river` if it matters for
   your deployment: a timeout wrapper around `Function.get()(context)`, or
   running hook execution in a separate worker process with
   `resource.setrlimit`.
 
 ## DB role isolation per tenant: not this fork's job, but here's how to do it
 
-Everything above is enforced from inside `river` — it controls whether code
+Everything above is enforced from inside `xii-django-river` — it controls whether code
 runs and who authorized it. It cannot control what a Postgres connection is
-allowed to touch once that code is running, because `river` is a Django app
+allowed to touch once that code is running, because `xii-django-river` is a Django app
 installed into someone else's project: it doesn't own connection setup,
 request routing, or how tenants get resolved. That part has to live in the
 consuming project's infrastructure layer. This section is generic guidance
-for whoever owns that layer, not a `river` feature — nothing here requires
-or assumes `river` at all beyond "arbitrary code may run in this
+for whoever owns that layer, not a `xii-django-river` feature — nothing here requires
+or assumes `xii-django-river` at all beyond "arbitrary code may run in this
 connection."
 
 **Why "put `Function` in a per-tenant schema" doesn't solve this by itself.**

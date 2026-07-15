@@ -16,7 +16,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'river',
+    'xii.django_river',
 )
 
 MIDDLEWARE = [
@@ -86,7 +86,7 @@ LOGGING = {
 
     },
     'loggers': {
-        'river': {
+        'xii.django_river': {
             'handlers': ['console'],
             'level': 'DEBUG'
         }

@@ -8,7 +8,7 @@ DATABASES = {
 }
 
 INSTALLED_APPS += (
-    'river.tests',
+    'xii.django_river.tests',
 )
 
 MIGRATION_MODULES = DisableMigrations()

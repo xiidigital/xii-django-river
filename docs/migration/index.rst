@@ -8,3 +8,4 @@ Migration Guide
 
     migration_2_to_3
     migration_31_to_32
+    migration_river_to_xii_django_river

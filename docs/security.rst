@@ -3,13 +3,13 @@
 Security: ``Function`` and DB-stored hooks
 ===========================================
 
-``river.Function`` stores a Python function body as text in the database
+``xii_django_river.Function`` stores a Python function body as text in the database
 and runs it with ``exec()`` (or, with the sandbox described below,
 ``RestrictedPython``). This is a deliberate design feature — hooks can be
 changed without a deploy — but it means **anyone who can write to the
 Function table can execute arbitrary code in the same process as the rest
 of the application.** This page exists so any project embedding
-``django-river`` can reason about that risk explicitly, instead of
+``xii-django-river`` can reason about that risk explicitly, instead of
 discovering it in production.
 
 This fork does not assume a particular deployment shape (single tenant,
@@ -37,9 +37,9 @@ Per-``Function`` approval gate
 Two separate permissions
     So "who can review" is configurable per deployment:
 
-    * ``river.approve_function`` — required to use the "Approve selected
+    * ``xii_django_river.approve_function`` — required to use the "Approve selected
       functions" admin action at all.
-    * ``river.self_approve_function`` — required, *in addition to the
+    * ``xii_django_river.self_approve_function`` — required, *in addition to the
       above*, for the author of a ``Function``'s last edit to approve
       their own change. Without it, ``Function.approve()`` raises
       ``ImproperlyConfigured`` when ``approver == updated_by``.
@@ -91,21 +91,21 @@ Per-schema cache isolation
     immediate, explicit configuration error.
 
 Optional execution sandbox (``RIVER_SANDBOX_DB_FUNCTIONS``, default ``False``)
-    When enabled (``pip install django-river[sandbox]``), ``Function``
+    When enabled (``pip install xii-django-river[sandbox]``), ``Function``
     bodies compile through `RestrictedPython
     <https://restrictedpython.readthedocs.io/>`_ instead of plain
     ``exec()``: no ``import`` statements resolve, no dunder attribute
     access compiles at all (blocks the classic
     ``().__class__.__bases__[0].__subclasses__()`` sandbox escape at the
     source level), and ``__builtins__`` is replaced with RestrictedPython's
-    ``safe_builtins``. See ``river/sandbox.py``. This is opt-in and not
+    ``safe_builtins``. See ``xii/django_river/sandbox.py``. This is opt-in and not
     fully backward compatible — bodies that rely on ``import`` or on
     reaching things outside the ``context`` argument will need rewriting.
 
-Test coverage: ``river/tests/test__function_gate.py``,
-``river/tests/test__function_approval.py``,
-``river/tests/test__hook_approval_gate.py``,
-``river/tests/test__function_sandbox.py``.
+Test coverage: ``xii/django_river/tests/test__function_gate.py``,
+``xii/django_river/tests/test__function_approval.py``,
+``xii/django_river/tests/test__hook_approval_gate.py``,
+``xii/django_river/tests/test__function_sandbox.py``.
 
 What this still does NOT do
 ----------------------------
@@ -134,10 +134,10 @@ No database-level tenant isolation
     author* the row; it does not affect what the code can reach once it
     executes. See "DB role isolation per tenant" below for concrete steps
     — this is infrastructure the consuming project owns, not something
-    ``django-river`` can implement from inside the ORM.
+    ``xii-django-river`` can implement from inside the ORM.
 
 No resource limits
-    Enforce this outside ``django-river`` if it matters for your
+    Enforce this outside ``xii-django-river`` if it matters for your
     deployment: a timeout wrapper around ``Function.get()(context)``, or
     running hook execution in a separate worker process with
     ``resource.setrlimit``.
@@ -214,15 +214,15 @@ authored/approved ``Function``\ s is acceptable.
 DB role isolation per tenant: not this fork's job, but here's how to do it
 -----------------------------------------------------------------------------
 
-Everything above is enforced from inside ``django-river`` — it controls
+Everything above is enforced from inside ``xii-django-river`` — it controls
 whether code runs and who authorized it. It cannot control what a Postgres
 connection is allowed to touch once that code is running, because
-``django-river`` is a Django app installed into someone else's project: it
+``xii-django-river`` is a Django app installed into someone else's project: it
 doesn't own connection setup, request routing, or how tenants get
 resolved. That part has to live in the consuming project's infrastructure
 layer. This section is generic guidance for whoever owns that layer, not a
-``django-river`` feature — nothing here requires or assumes
-``django-river`` at all beyond "arbitrary code may run in this
+``xii-django-river`` feature — nothing here requires or assumes
+``xii-django-river`` at all beyond "arbitrary code may run in this
 connection."
 
 **Why "put Function in a per-tenant schema" doesn't solve this by itself.**

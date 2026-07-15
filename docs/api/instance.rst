@@ -16,7 +16,7 @@ like in the example below;
 approve
 -------
 
-This is the function that helps you to approve next approval of the object easily. ``django-river`` will handle all
+This is the function that helps you to approve next approval of the object easily. ``xii-django-river`` will handle all
 the availability and the authorization issues.
 
 >>> my_model.river.my_state_field.approve(as_user=team_leader)
@@ -25,31 +25,28 @@ the availability and the authorization issues.
 +------------+-------+---------+------------+-------------+-----------------------------------------+
 |            | Type  | Default |  Optional  |   Format    |               Description               |
 +============+=======+=========+============+=============+=========================================+
-| as_user    | input | NaN     | False      | Django User | | A user to make the transaction.       |
-|            |       |         |            |             | | ``django-river`` will check           |
-|            |       |         |            |             | | if this user is authorized to         |
-|            |       |         |            |             | | make next action by looking at        |
-|            |       |         |            |             | | this user's permissions and           |
-|            |       |         |            |             | | user groups.                          |
+| as_user    | input | NaN     | False      | Django User | A user to make the transaction.         |
+|            |       |         |            |             | | ``xii-django-river`` will check if    |
+|            |       |         |            |             | | this user is authorized to make next  |
+|            |       |         |            |             | | action by looking at this user's      |
+|            |       |         |            |             | | permissions and user groups.          |
 +------------+-------+---------+------------+-------------+-----------------------------------------+
-| next_state | input | NaN     | True/False | State       | | This parameter is redundant           |
-|            |       |         |            |             | | as long as there is only one          |
-|            |       |         |            |             | | next state from the current           |
-|            |       |         |            |             | | state. But if there is multiple       |
-|            |       |         |            |             | | possible next state in place,         |
-|            |       |         |            |             | | ``django-river`` is naturally         |
-|            |       |         |            |             | | is unable know which one is           |
-|            |       |         |            |             | | actually supposed to be picked.       |
-|            |       |         |            |             | | If the given next state is not        |
-|            |       |         |            |             | | a valid next state a `RiverException` |
-|            |       |         |            |             | | will be thrown.                       |
+| next_state | input | NaN     | True/False | State       | This parameter is redundant as long as  |
+|            |       |         |            |             | | there is only one next state from the |
+|            |       |         |            |             | | current state. But if there is        |
+|            |       |         |            |             | | multiple possible next state in place,|
+|            |       |         |            |             | | ``xii-django-river`` is naturally     |
+|            |       |         |            |             | | unable know which one is actually     |
+|            |       |         |            |             | | supposed to be picked. If the given   |
+|            |       |         |            |             | | next state is not a valid next state a|
+|            |       |         |            |             | | `RiverException` will be thrown.      |
 +------------+-------+---------+------------+-------------+-----------------------------------------+
 
 get_available_approvals
 -----------------------
 
 This is the function that helps you to fetch all available approvals waiting for a specific user according to given source and
-destination states. If the source state is not provided, ``django-river`` will pick the current objects source state.
+destination states. If the source state is not provided, ``xii-django-river`` will pick the current objects source state.
 
 >>> transition_approvals = my_model.river.my_state_field.get_available_approvals(as_user=manager)
 >>> transition_approvals = my_model.river.my_state_field.get_available_approvals(as_user=manager, source_state=State.objects.get(name='in_progress'))

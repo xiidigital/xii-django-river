@@ -7,27 +7,34 @@ Change Logs
 ------------------
     * **Improvement**  -  Modernized for current Django (``4.2``–``6.0``) and Python (``3.10``–``3.13``); Django ``6.0`` requires Python ``>=3.12``.
     * **Drop**          -  ``django-mptt`` dependency removed (it was never actually used as a tree).
-    * **Improvement**  -  ``django-cte`` bumped to ``>=3.0``; ``django-codemirror2`` is now optional (``pip install django-river[codemirror]``).
-    * **Improvement**  -  SQL Server support rewritten on top of ``mssql-django`` (``pip install django-river[mssql]``) with a fully parametrized query, replacing the old ``sql_server.pyodbc``-based driver.
+    * **Improvement**  -  ``django-cte`` bumped to ``>=3.0``; ``django-codemirror2`` is now optional (``pip install xii-django-river[codemirror]``).
+    * **Improvement**  -  SQL Server support rewritten on top of ``mssql-django`` (``pip install xii-django-river[mssql]``) with a fully parametrized query, replacing the old ``sql_server.pyodbc``-based driver.
     * **Bug**           -  The public signals (``pre_approve``, ``post_approve``, ``pre_transition``, ``post_transition``, ``pre_on_complete``, ``post_on_complete``) were declared but never emitted. They're now actually sent from the relevant context managers; ``post_*`` signals fire only when no exception occurred.
     * **Bug**           -  ``Function.get()``'s cache was read by ``self.name`` but written by ``self.pk``, so it never hit and recompiled the body with ``exec()`` on every single hook execution. Fixed to cache correctly by key, validating ``version``/``body``.
     * **Security**      -  New setting ``RIVER_ALLOW_DB_FUNCTIONS`` (default ``False``): ``Function.get()`` refuses to execute anything unless explicitly enabled. Deliberate breaking change for anyone already using DB-stored hooks — they must opt in.
-    * **Security**      -  ``Function`` review workflow: ``is_approved`` field (reset whenever the body is edited), ``river.approve_function`` / ``river.self_approve_function`` permissions, and an immutable ``FunctionRevision`` audit trail (diff, who, when, plus a ``changed_by_username`` snapshot that survives account deletion).
+    * **Security**      -  ``Function`` review workflow: ``is_approved`` field (reset whenever the body is edited), ``xii_django_river.approve_function`` / ``xii_django_river.self_approve_function`` permissions, and an immutable ``FunctionRevision`` audit trail (diff, who, when, plus a ``changed_by_username`` snapshot that survives account deletion).
     * **Security**      -  ``Hook.save()`` now rejects (``ValidationError``) attaching a hook to an unapproved ``Function`` at configuration time, instead of the hook silently never firing at runtime.
-    * **Security**      -  Optional execution sandbox: new setting ``RIVER_SANDBOX_DB_FUNCTIONS`` (default ``False``, ``pip install django-river[sandbox]``) compiles ``Function`` bodies with `RestrictedPython <https://restrictedpython.readthedocs.io/>`_ instead of plain ``exec()``, blocking ``import`` and dunder-attribute sandbox escapes.
+    * **Security**      -  Optional execution sandbox: new setting ``RIVER_SANDBOX_DB_FUNCTIONS`` (default ``False``, ``pip install xii-django-river[sandbox]``) compiles ``Function`` bodies with `RestrictedPython <https://restrictedpython.readthedocs.io/>`_ instead of plain ``exec()``, blocking ``import`` and dunder-attribute sandbox escapes.
     * **Bug**           -  ``Function.get()``'s process-wide compiled-function cache could serve one tenant a function body compiled for another tenant's ``Function`` with the same primary key, under schema-per-tenant multitenancy. Cache key now includes the connection's schema name.
     * **Improvement**  -  New setting ``RIVER_STRICT_HOOKS`` (default ``False``): when ``True``, exceptions raised by hooks propagate and fail the transition instead of being swallowed and logged.
     * **Docs**          -  New :ref:`security_guide` page documenting the full threat model, what is and isn't covered by the mitigations above, and how to decide ``RIVER_STRICT_HOOKS`` and permission grants depending on who is trusted to author hooks (single team vs. platform-supervised multi-tenant vs. fully autonomous multi-tenant).
     * **Bug**           -  ``RiverObject.__getattr__`` raised a bare ``Exception`` instead of ``AttributeError``, breaking ``hasattr()``, ``copy``, ``pickle`` and introspection on models with a ``StateField``.
     * **Improvement**  -  ``WorkflowRegistry`` now indexes by the class itself instead of ``id(cls)`` (fragile under the dev server's autoreload, since ids get recycled after GC).
     * **Improvement**  -  ``RiverConfig`` now reads settings on every access instead of caching them forever, so ``override_settings`` and other dynamic changes are respected in tests and at runtime.
-    * **Bug**           -  ``RiverApp.ready()`` querying the database at startup (a ``RuntimeWarning`` on Django 5+) moved to a proper system check (``river.W001``).
+    * **Bug**           -  ``RiverApp.ready()`` querying the database at startup (a ``RuntimeWarning`` on Django 5+) moved to a proper system check (``xii_django_river.W001``).
     * **Improvement**  -  Unified ``object_id`` to ``CharField(200)`` across ``Transition``/``TransitionApproval`` and hook models, with composite ``(content_type, object_id)`` indexes to avoid full scans on object lookups.
     * **Improvement**  -  Performance: ``prefetch_related`` in ``initialize_approvals``/``_re_create_cycled_path`` to remove N+1s, bulk ``update()`` in ``jump_to``, ``exists()`` instead of repeated ``count()`` calls.
     * **Infra**         -  ``pyproject.toml`` replaces legacy ``setup.py``/``setup.cfg``; GitHub Actions CI (matrix across supported Python/Django versions, missing-migrations check, full test run) replaces the dead Travis config.
     * **Tests**         -  Removed long-skipped legacy migration tests and a test suite that wrote migrations at runtime; suite is 69 tests, 0 skips.
+    * **Breaking**      -  The importable package moved from ``river`` to ``xii.django_river`` and the Django ``app_label`` changed from ``river`` to ``xii_django_river``. Anyone upgrading an existing installation must follow :doc:`migration/migration_river_to_xii_django_river` before switching ``INSTALLED_APPS`` over.
 
     See ``TECH_DEBT.md`` and ``SECURITY.md`` (or :ref:`security_guide`) in the repository for the full rationale and trade-offs behind the security-related items above.
+
+3.3.0 (Stable) and earlier: upstream django-river releases
+------------------------------------------------------------
+Everything from here down (``3.3.0`` and earlier) is inherited, unmodified, from
+the original `django-river <https://github.com/javrasya/django-river>`_ project's
+own changelog, predating this fork.
 
 3.3.0 (Stable):
 ---------------

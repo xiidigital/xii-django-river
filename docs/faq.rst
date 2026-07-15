@@ -29,28 +29,28 @@ before they get modified. Even though having a workflow statically defined in th
 code brings some bureaucracy, it might be good to have it to prevent accidental
 modifications and to lessen human errors.
 
-What are the differences between ``django-river`` and ``viewflow``?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+What are the differences between ``xii-django-river`` and ``viewflow``?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 There are different kind of workflow libraries for ``django``. It can be
 working either with dynamically defined workflows or with statically defined
-workflows. ``django-river`` is one of those that works with dynamically defined
+workflows. ``xii-django-river`` is one of those that works with dynamically defined
 workflows (what we call that it supports on-the-fly changes) where as ``viewflow``
 is one of those that works with statically defined workflows in the code.
 
-What are the differences between ``django-river`` and ``django-fsm``?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+What are the differences between ``xii-django-river`` and ``django-fsm``?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 There are different kind of workflow libraries for ``django``. It can be
 working either with dynamically defined workflows or with statically defined
-workflows. ``django-river`` is one of those that works with dynamically defined
+workflows. ``xii-django-river`` is one of those that works with dynamically defined
 workflows (what we call that it supports on-the-fly changes) where as ``django-fsm``
 is one of those that works with statically defined workflows in the code.
 
 Can I have multiple initial states in a workflow?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-No. The way how ``django-river`` works is that, whenever one of your workflow
+No. The way how ``xii-django-river`` works is that, whenever one of your workflow
 object is created, the state field of the workflow inside that object is set by
 the initial field you specified. So it would be ambiguous to have more than one
 initial state.
@@ -58,7 +58,7 @@ initial state.
 Can I have a workflow that circulates?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Yes. ``django-river`` allows that and as it circulates, ``django-river`` extends
+Yes. ``xii-django-river`` allows that and as it circulates, ``xii-django-river`` extends
 the lifecycle of a particular workflow object with the circular part of it.
 
 Is there a limit on how many states I can have in a workflow?
@@ -77,29 +77,29 @@ in that authorization rule can see and approve that transition.
 Can I have two authorization rules for one transition and have one of them wait the other? (``Vertical Authorization Rules``)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Yes. ``django-river`` has some kind of a prioritization mechanism
+Yes. ``xii-django-river`` has some kind of a prioritization mechanism
 between the authorization rules on the same transitions. One that is
 with more priority will be able to be seen and approved before the one with
 less priority on the same transitions. Let's say you have a workflow with a
 transition which should be approved by a team leader before it bothers
-the manager. That is so possible with ``django-river``.
+the manager. That is so possible with ``xii-django-river``.
 
 Can I have two state fields in one ``Django`` model?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Yes. The qualifier of a workflow for ``django-river`` is the model class and field name.
+Yes. The qualifier of a workflow for ``xii-django-river`` is the model class and field name.
 You can have as many workflow as you like in a ``Django`` model.
 
 Can I have two workflow in parallel?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Yes. The qualifier of a workflow for ``django-river`` is the model class and field name.
+Yes. The qualifier of a workflow for ``xii-django-river`` is the model class and field name.
 You can have as many workflow as you like in a ``Django`` model.
 
 Can I have two workflow in different ``Django`` models?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Yes. The qualifier of a workflow for ``django-river`` is the model class and field name.
+Yes. The qualifier of a workflow for ``xii-django-river`` is the model class and field name.
 So it is possible to qualify yet another workflow with a different model class.
 
 
@@ -112,7 +112,7 @@ What happens to the existing workflow object if I add a new transition to the wo
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Simply nothing. Existing workflow objects are not affected by the changes
-on the workflow (Except the hooks). The way how ``django-river`` works is
+on the workflow (Except the hooks). The way how ``xii-django-river`` works is
 that, it creates an isolated lifecycle for an object when it is created
 out of it's workflow specification once and remain the same forever. So it
 lives in it's world. It is very hard to predict what is gonna happen to the
@@ -123,17 +123,17 @@ touch the existing workflow objects due to the changes on the workflow.
 Can I add a new hook on-the-fly?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The answer has ben yes since ``django-river`` version ``3.0.0``.
+The answer has ben yes since ``xii-django-river`` version ``3.0.0``.
 
 Can I delete an existing hook on-the-fly?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The answer has ben yes since ``django-river`` version ``3.0.0``.
+The answer has ben yes since ``xii-django-river`` version ``3.0.0``.
 
 Can I modify a the source code of the function that is used in the hooks on-the-fly?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The answer has ben yes since ``django-river`` version ``3.0.0``. ``django-river`` also
+The answer has ben yes since ``xii-django-river`` version ``3.0.0``. ``xii-django-river`` also
 comes with an input component on the admin page that supports basic code highlighting.
 
 (Fork-specific) It has to be gated, though: this changes the source code
@@ -149,7 +149,7 @@ Why did my hook stop firing right after I edited its Function?
 ``is_approved`` flag to ``False`` — a reviewer has to sign off on the new
 code before it can run again, it doesn't inherit the previous approval.
 Approve it again (with someone other than the last editor, unless they
-hold ``river.self_approve_function``) and it will resume firing. See
+hold ``xii_django_river.self_approve_function``) and it will resume firing. See
 :ref:`security_guide`.
 
 Is there any delay for functions updates?
@@ -161,17 +161,17 @@ stored ``body``. (Fork-specific) Whether the *new* code is allowed to
 ``is_approved`` to ``False`` (see above), the new code won't execute until
 it's approved again, regardless of how quickly it was saved.
 
-Can I use ``django-river`` with ``sqlalchemy``?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Can I use ``xii-django-river`` with ``sqlalchemy``?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The answer is no unless you can make ``Django`` work with ``sqlalchemy``.
-``django-river`` uses ``Django``'s orm heavily. So it is probably not a
+``xii-django-river`` uses ``Django``'s orm heavily. So it is probably not a
 way to go.
 
 What is the difference between ``Class API`` and ``Instance API``?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-``django-river`` provides two kinds of API. One which is for the object and one
+``xii-django-river`` provides two kinds of API. One which is for the object and one
 which is for the class of the object. The ``Class API`` is the API that you can access
 via the class whereas the ``Instance API`` is the API that you can access via the instance
 or in other words via the workflow object. The APIs on both sides differ from each other
@@ -212,7 +212,7 @@ more user friendly error if you would like to warn your user about that.
 How to reproduce before opening an issue?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-``django-river`` has behavioral tests that are very easy to read and write. One can easily set up one
+``xii-django-river`` has behavioral tests that are very easy to read and write. One can easily set up one
 and see if everything is running as expected. Please look at other examples (that are the files with ``.feature`` postfix)
 under ``features`` folder that you can get all the inspiration and create one for yourself before you open an issue
 Then refer to your behavioral test to point out what is not function as expected to speed the process up for your own

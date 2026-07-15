@@ -3,9 +3,9 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "django-river"
+name = "xii-django-river"
 version = "4.0.0"
-description = "Django Workflow Library"
+description = "Django Workflow Library (XII Digital fork of django-river)"
 readme = "README.rst"
 license = { text = "BSD" }
 authors = [{ name = "Ahmet DAL", email = "ceahmetdal@gmail.com" }]
@@ -30,7 +30,8 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/javrasya/django-river"
+Homepage = "https://github.com/xiidigital/xii-django-river"
+Upstream = "https://github.com/javrasya/django-river"
 
 [project.optional-dependencies]
 codemirror = ["django-codemirror2"]
@@ -38,8 +39,8 @@ mssql = ["mssql-django>=1.4", "pyodbc"]
 sandbox = ["RestrictedPython>=6.0"]
 
 [tool.setuptools.packages.find]
-include = ["river*"]
-exclude = ["river.tests*"]
+include = ["xii", "xii.django_river*"]
+exclude = ["xii.django_river.tests*"]
 
 [tool.setuptools.package-data]
-river = ["sql/mssql/*.sql"]
+"xii.django_river" = ["sql/mssql/*.sql"]

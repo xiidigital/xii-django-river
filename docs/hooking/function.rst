@@ -6,7 +6,7 @@ Functions
 =========
 
 Functions are the description in ``Python`` of what you want to do on certain events happen. So you define them once and you can use them
-with multiple hooking up. Just go to ``/admin/river/function/`` admin page and create your functions there.``django-river`` function admin support
+with multiple hooking up. Just go to ``/admin/xii_django_river/function/`` admin page and create your functions there.``xii-django-river`` function admin support
 python code highlighting as well if you enable the ``codemirror2`` app. Don't forget to collect statics for production deployments.
 
 
@@ -15,7 +15,7 @@ python code highlighting as well if you enable the ``codemirror2`` app. Don't fo
        INSTALLED_APPS=[
            ...
            codemirror2
-           river
+           xii.django_river
            ...
        ]
 
@@ -28,7 +28,7 @@ Here is an example function;
         def handle(context):
             print(datetime.now())
 
-**Important:** **YOUR FUNCTION SHOULD BE NAMED AS** ``handle``. Otherwise ``django-river`` won't execute your function.
+**Important:** **YOUR FUNCTION SHOULD BE NAMED AS** ``handle``. Otherwise ``xii-django-river`` won't execute your function.
 
 |Create Function Page|
 
@@ -69,9 +69,9 @@ Approving a ``Function``
 Two Django permissions control who can move a ``Function`` from
 "pending" to "approved":
 
-* ``river.approve_function`` — required to use the "Approve selected
+* ``xii_django_river.approve_function`` — required to use the "Approve selected
   functions" action on the ``Function`` admin page at all.
-* ``river.self_approve_function`` — required, *in addition to the above*,
+* ``xii_django_river.self_approve_function`` — required, *in addition to the above*,
   for the same person who last edited a ``Function`` to approve their own
   change. Without it, approving your own edit raises
   ``ImproperlyConfigured``.
@@ -100,7 +100,7 @@ past revisions from the UI.
 Functions registered from code
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-``river.models.function.create_function(callback)`` registers a plain
+``xii.django_river.models.function.create_function(callback)`` registers a plain
 Python function *defined in your codebase* as a ``Function`` row (this is
 how you satisfy ``Hook.callback_function``'s mandatory foreign key without
 hand-typing code into the admin). Since that body already went through
@@ -114,7 +114,7 @@ Optional sandbox: ``RIVER_SANDBOX_DB_FUNCTIONS``
 By default, an approved ``Function`` still runs with plain ``exec()`` —
 full access to whatever the Python process can reach. Setting
 ``RIVER_SANDBOX_DB_FUNCTIONS = True`` (requires
-``pip install django-river[sandbox]``) compiles the body through
+``pip install xii-django-river[sandbox]``) compiles the body through
 `RestrictedPython <https://restrictedpython.readthedocs.io/>`_ instead:
 
 * ``import`` statements don't resolve (no ``__import__`` in the restricted
@@ -136,7 +136,7 @@ reachable with their full attribute surface).
 Context Parameter
 -----------------
 
-``django-river`` will pass a ``context`` down to your function in order for you to know why the function is triggered or for which object or so. And the ``context``
+``xii-django-river`` will pass a ``context`` down to your function in order for you to know why the function is triggered or for which object or so. And the ``context``
 will look different for different type of events. But it also has some common parts for all the events. Let's look at how it looks;
 
 
@@ -210,7 +210,7 @@ Example Function
 
    .. code:: python
 
-        from river.models.hook import BEFORE, AFTER
+        from xii.django_river.models.hook import BEFORE, AFTER
 
         def _handle_my_transitions(hook):
             workflow = hook['payload']['workflow']

@@ -10,7 +10,7 @@ def issue(context, description, identifier):
 
 def _approve(context, workflow_object_identifier, username, next_state):
     from django.contrib.auth.models import User
-    from river.models import State
+    from xii.django_river.models import State
 
     workflow_object = getattr(context, "workflow_objects", {})[workflow_object_identifier]
 
