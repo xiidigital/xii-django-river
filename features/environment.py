@@ -1,14 +1,10 @@
-import os
-
-import django
 from behave import register_type
 from django.core import management
 
-os.environ["DJANGO_SETTINGS_MODULE"] = "settings.with_sqlite3"
-
-
-def before_all(context):
-    django.setup()
+# Run this suite via `manage.py behave --settings=settings.for_behave`.
+# Django is already set up by the time management commands execute, so
+# there's no need (and it would be wrong to force a settings module here,
+# overriding whatever --settings the invocation actually used).
 
 
 def before_scenario(context, scenario):

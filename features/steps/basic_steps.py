@@ -6,27 +6,11 @@ from hamcrest import assert_that, has_length, is_
 from xii.django_river.models import State
 
 
-@given('a permission with name {name:w}')
-def permission(context, name):
-    from xii.django_river.models.factories import PermissionObjectFactory
-
-    PermissionObjectFactory(name=name)
-
-
 @given('a group with name "{name:ws}"')
 def group(context, name):
     from xii.django_river.models.factories import GroupObjectFactory
 
     GroupObjectFactory(name=name)
-
-
-@given('a user with name {name:w} with permission "{permission_name:ws}"')
-def user_with_permission(context, name, permission_name):
-    from django.contrib.auth.models import Permission
-    from xii.django_river.models.factories import UserObjectFactory
-
-    permission = Permission.objects.get(name=permission_name)
-    UserObjectFactory(username=name, user_permissions=[permission])
 
 
 @given('a user with name {name:w} with group "{group_name:ws}"')
@@ -77,22 +61,6 @@ def transition(context, source_state_label, destination_state_label, workflow_id
     transitions = getattr(context, "transitions", {})
     transitions[identifier] = transition
     context.transitions = transitions
-
-
-@given('an authorization rule for the transition "{source_state_label:ws}" -> "{destination_state_label:ws}" with permission "{permission_name:ws}" and priority {priority:d}')
-def authorization_rule_with_permission(context, source_state_label, destination_state_label, permission_name, priority):
-    from django.contrib.auth.models import Permission
-    from xii.django_river.models.factories import TransitionApprovalMetaFactory
-
-    permission = Permission.objects.get(name=permission_name)
-    transition_identifier = source_state_label + destination_state_label
-    transition_meta = getattr(context, "transitions", {})[transition_identifier]
-    TransitionApprovalMetaFactory.create(
-        workflow=transition_meta.workflow,
-        transition_meta=transition_meta,
-        priority=priority,
-        permissions=[permission]
-    )
 
 
 @given('an authorization rule for the transition "{source_state_label:ws}" -> "{destination_state_label:ws}" with group "{group_name:ws}" and priority {priority:d}')

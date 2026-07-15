@@ -30,3 +30,17 @@ jobs:
         run: python manage.py makemigrations xii_django_river --check --dry-run --settings=settings.for_migrations_check
       - name: Run tests
         run: python manage.py test xii.django_river --settings=settings.with_sqlite3
+
+  bdd:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install "Django~=6.0.0" django-cte factory-boy pyhamcrest RestrictedPython behave-django
+      - name: Run BDD scenarios (features/)
+        run: python manage.py behave --no-input --settings=settings.for_behave

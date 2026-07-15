@@ -1,8 +1,8 @@
 [run]
 omit =
-    river/admin/*
-    river/tests/*
-    river/migrations/*
+    xii/django_river/admin/*
+    xii/django_river/tests/*
+    xii/django_river/migrations/*
     settings/*
     */__init__*
     .tox/*
