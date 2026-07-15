@@ -40,7 +40,7 @@ class TransitionSignal(object):
                     (Q(object_id__isnull=True) | Q(object_id=self.workflow_object.pk, content_type=self.content_type)) &
                     (Q(transition__isnull=True) | Q(transition=self.transition_approval.transition)) &
                     Q(
-                        workflow__field_name=self.field_name,
+                        workflow=self.workflow,
                         transition_meta=self.transition_approval.transition.meta,
                         hook_type=BEFORE
                     )
@@ -107,7 +107,7 @@ class ApproveSignal(object):
                 (Q(object_id__isnull=True) | Q(object_id=self.workflow_object.pk, content_type=self.content_type)) &
                 (Q(transition_approval__isnull=True) | Q(transition_approval=self.transition_approval)) &
                 Q(
-                    workflow__field_name=self.field_name,
+                    workflow=self.workflow,
                     transition_approval_meta=self.transition_approval.meta,
                     hook_type=BEFORE
                 )
@@ -128,7 +128,7 @@ class ApproveSignal(object):
                 (Q(object_id__isnull=True) | Q(object_id=self.workflow_object.pk, content_type=self.content_type)) &
                 (Q(transition_approval__isnull=True) | Q(transition_approval=self.transition_approval)) &
                 Q(
-                    workflow__field_name=self.field_name,
+                    workflow=self.workflow,
                     transition_approval_meta=self.transition_approval.meta,
                     hook_type=AFTER
                 )
@@ -176,7 +176,7 @@ class OnCompleteSignal(object):
             for hook in OnCompleteHook.objects.select_related('callback_function').filter(
                     (Q(object_id__isnull=True) | Q(object_id=self.workflow_object.pk, content_type=self.content_type)) &
                     Q(
-                        workflow__field_name=self.field_name,
+                        workflow=self.workflow,
                         hook_type=BEFORE
                     )
             ):
@@ -193,7 +193,7 @@ class OnCompleteSignal(object):
             for hook in OnCompleteHook.objects.select_related('callback_function').filter(
                     (Q(object_id__isnull=True) | Q(object_id=self.workflow_object.pk, content_type=self.content_type)) &
                     Q(
-                        workflow__field_name=self.field_name,
+                        workflow=self.workflow,
                         hook_type=AFTER
                     )
             ):

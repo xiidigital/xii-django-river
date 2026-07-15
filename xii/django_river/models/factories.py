@@ -88,23 +88,17 @@ class WorkflowFactory(DjangoModelFactory):
 
 
 class TransitionMetaFactory(DjangoModelFactory):
+    # No `permissions`/post_generation hook here: TransitionMeta has no
+    # `permissions` field (only TransitionApprovalMeta does) - an earlier
+    # copy-paste from TransitionApprovalMetaFactory left one that would
+    # AttributeError if anyone ever passed permissions= to this factory.
+    # Confirmed unused anywhere in tests/features before removing it.
     class Meta:
         model = TransitionMeta
 
     source_state = factory.SubFactory(StateObjectFactory)
     destination_state = factory.SubFactory(StateObjectFactory)
     workflow = factory.SubFactory(WorkflowFactory)
-
-    @factory.post_generation
-    def permissions(self, create, extracted, **kwargs):
-        if not create:
-            # Simple build, do nothing.
-            return
-
-        if extracted:
-            # A list of groups were passed in, use them
-            for permission in extracted:
-                self.permissions.add(permission)
 
 
 class TransitionApprovalMetaFactory(DjangoModelFactory):
