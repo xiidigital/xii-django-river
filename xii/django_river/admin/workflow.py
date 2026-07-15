@@ -7,10 +7,12 @@ from xii.django_river.models import Workflow
 
 
 def get_workflow_choices():
-    class_by_id = lambda cid: workflow_registry.class_index[cid]
+    # workflow_registry.workflows is keyed by the model class itself (not
+    # id(cls) or a class_index lookup table - that indirection was removed
+    # in an earlier pass but this loop was never updated, so it raised
+    # AttributeError on every Workflow add/change admin page load.
     result = []
-    for class_id, field_names in workflow_registry.workflows.items():
-        cls = class_by_id(class_id)
+    for cls, field_names in workflow_registry.workflows.items():
         content_type = ContentType.objects.get_for_model(cls)
         for field_name in field_names:
             result.append(("%s %s" % (content_type.pk, field_name), "%s.%s - %s" % (cls.__module__, cls.__name__, field_name)))

@@ -38,3 +38,18 @@ class WorkflowAdminTest(TestCase):
         response = self.client.get(url)
 
         assert_that(response.status_code, equal_to(200))
+
+    def test_addPageRendersWithoutError(self):
+        # Regression test for a second, sibling bug: WorkflowForm's
+        # get_workflow_choices() called workflow_registry.class_index, an
+        # attribute that no longer exists since WorkflowRegistry was keyed
+        # by model class directly - this crashed the Workflow add/change page
+        # with AttributeError every time it was opened.
+        state1, state2 = RawState("state1"), RawState("state2")
+        FlowBuilder("my_field", self.content_type).with_transition(state1, state2).build()
+
+        self.client.login(username=self.superuser.get_username(), password="password")
+        url = reverse("admin:xii_django_river_workflow_add")
+        response = self.client.get(url)
+
+        assert_that(response.status_code, equal_to(200))

@@ -42,9 +42,7 @@ class OrmDriver(RiverDriver):
         ).filter(transition__source_state=getattr(workflow_objects.col, self.field_name + "_id"))
 
     def _authorized_approvals(self, as_user):
-        group_q = Q()
-        for g in as_user.groups.all():
-            group_q = group_q | Q(groups__in=[g])
+        group_q = Q(groups__in=as_user.groups.all())
 
         permissions = []
         for backend in auth.get_backends():

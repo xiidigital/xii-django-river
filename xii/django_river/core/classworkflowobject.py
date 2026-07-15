@@ -34,8 +34,9 @@ class ClassWorkflowObject(object):
 
     @property
     def initial_state(self):
-        workflow = Workflow.objects.filter(content_type=self._content_type, field_name=self.field_name).first()
-        return workflow.initial_state if workflow else None
+        # self.workflow is already the same lookup done in __init__ - reuse
+        # it instead of re-querying Workflow on every access.
+        return self.workflow.initial_state if self.workflow else None
 
     @property
     def final_states(self):

@@ -1,7 +1,6 @@
 import logging
 
 from functools import reduce
-from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.db.models import Q, Max
 from django.db.transaction import atomic
@@ -227,20 +226,15 @@ class InstanceWorkflowObject(object):
             TransitionAuditLog.objects.bulk_create(entries)
 
     def _approve_signal(self, approval):
-        return ApproveSignal(self.workflow_object, self.field_name, approval)
+        # workflow/content_type are already loaded on self - pass them
+        # through instead of letting ApproveSignal re-query them.
+        return ApproveSignal(self.workflow_object, self.field_name, approval, workflow=self.workflow, content_type=self.content_type)
 
     def _transition_signal(self, has_transit, approval):
-        return TransitionSignal(has_transit, self.workflow_object, self.field_name, approval)
+        return TransitionSignal(has_transit, self.workflow_object, self.field_name, approval, workflow=self.workflow, content_type=self.content_type)
 
     def _on_complete_signal(self):
-        return OnCompleteSignal(self.workflow_object, self.field_name)
-
-    @property
-    def _content_type(self):
-        return ContentType.objects.get_for_model(self.workflow_object)
-
-    def _to_key(self, source_state):
-        return str(self.content_type.pk) + self.field_name + source_state.label
+        return OnCompleteSignal(self.workflow_object, self.field_name, workflow=self.workflow, content_type=self.content_type, status=self.on_final_state)
 
     def _check_if_it_cycled(self, done_transition):
         qs = Transition.objects.filter(

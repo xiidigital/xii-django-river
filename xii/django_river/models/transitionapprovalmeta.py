@@ -48,7 +48,6 @@ def post_save_model(sender, instance, *args, **kwargs):
         .exclude(parents__in=[instance.pk]) \
         .exclude(pk=instance.pk)
 
-    instance = TransitionApprovalMeta.objects.get(pk=instance.pk)
     if parents:
         instance.parents.add(*parents)
 
