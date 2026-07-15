@@ -76,6 +76,18 @@ def _on_workflow_object_saved(sender, instance, created, *args, **kwargs):
 
 
 def _on_workflow_object_deleted(sender, instance, *args, **kwargs):
-    OnApprovedHook.objects.filter(object_id=instance.pk, content_type=ContentType.objects.get_for_model(instance.__class__)).delete()
-    OnTransitHook.objects.filter(object_id=instance.pk, content_type=ContentType.objects.get_for_model(instance.__class__)).delete()
-    OnCompleteHook.objects.filter(object_id=instance.pk, content_type=ContentType.objects.get_for_model(instance.__class__)).delete()
+    # Transition/TransitionApproval are NOT cleaned up here: the
+    # `<field>_transitions`/`<field>_transition_approvals` GenericRelations
+    # declared above already make Django's deletion collector cascade
+    # through them automatically when the workflow object itself is
+    # deleted (that's what a GenericRelation is for) - see
+    # TransitionApproval.transition's on_delete=CASCADE (models/transitionapproval.py)
+    # for why that cascade used to fail outright with ProtectedError instead
+    # of quietly leaving orphans. TransitionAuditLog is untouched by design:
+    # it's an append-only audit trail meant to survive the object it
+    # describes being deleted, same as FunctionRevision surviving its
+    # Function being deleted.
+    content_type = ContentType.objects.get_for_model(instance.__class__)
+    OnApprovedHook.objects.filter(object_id=instance.pk, content_type=content_type).delete()
+    OnTransitHook.objects.filter(object_id=instance.pk, content_type=content_type).delete()
+    OnCompleteHook.objects.filter(object_id=instance.pk, content_type=content_type).delete()

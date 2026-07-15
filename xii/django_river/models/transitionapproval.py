@@ -48,7 +48,18 @@ class TransitionApproval(BaseModel):
     meta = models.ForeignKey(TransitionApprovalMeta, verbose_name=_('Meta'), related_name="transition_approvals", null=True, blank=True, on_delete=SET_NULL)
     workflow = models.ForeignKey(Workflow, verbose_name=_("Workflow"), related_name='transition_approvals', on_delete=PROTECT)
 
-    transition = models.ForeignKey(Transition, verbose_name=_("Transition"), related_name='transition_approvals', on_delete=PROTECT)
+    # CASCADE, not PROTECT: a workflow object's StateField sets up
+    # GenericRelations (`<field>_transitions`/`<field>_transition_approvals`,
+    # see models/fields/state.py) so deleting the object cascades through to
+    # its Transition/TransitionApproval rows automatically. With this FK as
+    # PROTECT, that cascade collided with itself - Django's deletion
+    # collector tried to CASCADE-delete a Transition that a TransitionApproval
+    # (itself also being cascade-deleted in the very same operation)
+    # protected - and deleting ANY workflow object that had ever been
+    # approved raised ProtectedError unconditionally. Nothing in this
+    # codebase deletes a Transition directly outside of that cascade path,
+    # so there was no real invariant PROTECT was guarding here.
+    transition = models.ForeignKey(Transition, verbose_name=_("Transition"), related_name='transition_approvals', on_delete=CASCADE)
 
     transactioner = models.ForeignKey(app_config.USER_CLASS, verbose_name=_('Transactioner'), null=True, blank=True, on_delete=SET_NULL)
     transaction_date = models.DateTimeField(null=True, blank=True)

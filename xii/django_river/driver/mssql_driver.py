@@ -1,8 +1,10 @@
 import os
 from os.path import dirname
 
+from django.contrib import auth
 from django.contrib.auth.models import Permission
 from django.db import connection
+from django.db.models import Q
 
 from xii.django_river.driver.river_driver import RiverDriver
 from xii.django_river.models import TransitionApproval, PENDING
@@ -64,8 +66,24 @@ class MsSqlDriver(RiverDriver):
 
     @staticmethod
     def _permission_ids(as_user):
-        permissions = as_user.user_permissions.all() | Permission.objects.filter(group__user=as_user)
-        return list(permissions.values_list("pk", flat=True)) or [-1]
+        # Mirrors OrmDriver._authorized_approvals: goes through
+        # auth.get_backends() rather than reading user_permissions/group
+        # permissions directly, so a user authorized only via a custom auth
+        # backend (e.g. an object-level permission backend) is recognized
+        # here too, instead of only on non-MSSQL backends.
+        permission_strings = set()
+        for backend in auth.get_backends():
+            permission_strings.update(backend.get_all_permissions(as_user))
+
+        if not permission_strings:
+            return [-1]
+
+        permission_q = Q()
+        for permission_string in permission_strings:
+            label, codename = permission_string.split('.')
+            permission_q |= Q(content_type__app_label=label, codename=codename)
+
+        return list(Permission.objects.filter(permission_q).values_list("pk", flat=True)) or [-1]
 
     @staticmethod
     def _group_ids(as_user):
