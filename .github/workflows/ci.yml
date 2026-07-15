@@ -27,6 +27,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install "Django~=${{ matrix.django }}.0" django-cte factory-boy pyhamcrest RestrictedPython
       - name: Check for missing migrations
-        run: python manage.py makemigrations river --check --dry-run --settings=settings.with_sqlite3
+        run: python manage.py makemigrations xii_django_river --check --dry-run --settings=settings.for_migrations_check
       - name: Run tests
-        run: python manage.py test river --settings=settings.with_sqlite3
+        run: python manage.py test xii.django_river --settings=settings.with_sqlite3

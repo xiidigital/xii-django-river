@@ -1,7 +1,7 @@
 ---
 exclude_paths:
-  - 'river/migrations/*'
+  - 'xii/django_river/migrations/*'
   - '**/tests/**'
   - 'settings/**'
-  - 'river/sql/**/**'
+  - 'xii/django_river/sql/**/**'
   - 'docs/conf.py'
