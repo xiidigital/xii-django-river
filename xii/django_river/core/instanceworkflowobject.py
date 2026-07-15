@@ -111,8 +111,7 @@ class InstanceWorkflowObject(object):
             self.set_state(state)
             self.workflow_object.save()
 
-            for jumped in jumped_transitions_list:
-                self._log_audit(TransitionAuditLog.ACTION_JUMPED, jumped, as_user)
+            self._log_audit(TransitionAuditLog.ACTION_JUMPED, jumped_transitions_list, as_user)
 
         except Transition.DoesNotExist:
             raise RiverException(ErrorCode.STATE_IS_NOT_AVAILABLE_TO_BE_JUMPED, "This state is not available to be jumped in the future of this object")
@@ -149,7 +148,7 @@ class InstanceWorkflowObject(object):
         approval.previous = self.recent_approval
         approval.save()
 
-        self._log_audit(TransitionAuditLog.ACTION_APPROVED, approval.transition, as_user)
+        self._log_audit(TransitionAuditLog.ACTION_APPROVED, [approval.transition], as_user)
 
         if next_state:
             self.cancel_impossible_future(approval)
@@ -202,21 +201,30 @@ class InstanceWorkflowObject(object):
         TransitionApproval.objects.filter(transition__in=cancelled_transitions).update(status=CANCELLED)
         cancelled_transitions.update(status=CANCELLED)
 
-        for cancelled in cancelled_transitions_list:
-            self._log_audit(TransitionAuditLog.ACTION_CANCELLED, cancelled, approved_approval.transactioner)
+        self._log_audit(TransitionAuditLog.ACTION_CANCELLED, cancelled_transitions_list, approved_approval.transactioner)
 
-    def _log_audit(self, action, transition, actor):
-        TransitionAuditLog.objects.create(
-            workflow=self.workflow,
-            content_type=self.content_type,
-            object_id=self.workflow_object.pk,
-            source_state=transition.source_state,
-            destination_state=transition.destination_state,
-            transition=transition,
-            action=action,
-            actor=actor,
-            actor_username=username_snapshot(actor),
-        )
+    def _log_audit(self, action, transitions, actor):
+        # bulk_create instead of one INSERT per transition: cancel_impossible_future
+        # and jump_to can each touch many transitions in one call, and
+        # TransitionAuditLog has no M2M fields and no signals depending on
+        # per-instance save(), so there's nothing bulk_create would skip here.
+        actor_username = username_snapshot(actor)
+        entries = [
+            TransitionAuditLog(
+                workflow=self.workflow,
+                content_type=self.content_type,
+                object_id=self.workflow_object.pk,
+                source_state=transition.source_state,
+                destination_state=transition.destination_state,
+                transition=transition,
+                action=action,
+                actor=actor,
+                actor_username=actor_username,
+            )
+            for transition in transitions
+        ]
+        if entries:
+            TransitionAuditLog.objects.bulk_create(entries)
 
     def _approve_signal(self, approval):
         return ApproveSignal(self.workflow_object, self.field_name, approval)

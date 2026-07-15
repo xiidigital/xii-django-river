@@ -16,6 +16,7 @@ class TransitionAuditLogAdmin(admin.ModelAdmin):
         'date_created', 'workflow', 'action', 'source_state', 'destination_state',
         'actor_username', 'content_type', 'object_id',
     )
+    list_select_related = ('workflow', 'source_state', 'destination_state', 'content_type')
     list_filter = ('action', 'workflow', 'content_type')
     search_fields = ('actor_username', 'object_id')
     readonly_fields = [f.name for f in TransitionAuditLog._meta.fields]

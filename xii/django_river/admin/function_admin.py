@@ -48,6 +48,7 @@ class FunctionRevisionInline(admin.TabularInline):
 class FunctionAdmin(admin.ModelAdmin):
     form = FunctionForm
     list_display = ('name', 'function_version', 'is_approved', 'updated_by', 'approved_by', 'date_updated')
+    list_select_related = ('updated_by', 'approved_by')
     list_filter = ('is_approved',)
     readonly_fields = ('version', 'date_created', 'date_updated', 'created_by', 'updated_by', 'is_approved', 'approved_by', 'approved_at')
     inlines = [FunctionRevisionInline]

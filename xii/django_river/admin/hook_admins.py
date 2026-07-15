@@ -43,14 +43,17 @@ class DefaultWorkflowModelAdmin(admin.ModelAdmin):
 
 class OnApprovedHookAdmin(admin.ModelAdmin):
     list_display = ('workflow', 'callback_function', 'transition_approval_meta')
+    list_select_related = ('workflow', 'callback_function', 'transition_approval_meta')
 
 
 class OnTransitHookAdmin(admin.ModelAdmin):
     list_display = ('workflow', 'callback_function', 'transition_meta')
+    list_select_related = ('workflow', 'callback_function', 'transition_meta')
 
 
 class OnCompleteHookAdmin(admin.ModelAdmin):
     list_display = ('workflow', 'callback_function')
+    list_select_related = ('workflow', 'callback_function')
 
 
 admin.site.register(OnApprovedHook, OnApprovedHookAdmin)

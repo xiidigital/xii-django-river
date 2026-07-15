@@ -49,7 +49,13 @@ class WorkflowForm(forms.ModelForm):
 # noinspection PyMethodMayBeStatic
 class WorkflowAdmin(admin.ModelAdmin):
     form = WorkflowForm
+    # 'field_name' is a real field on Workflow - no custom method needed (there
+    # used to be one here, shadowing it with `obj.workflow.field_name`, which
+    # doesn't exist on a Workflow instance and raised AttributeError on every
+    # changelist render; nothing exercised this admin page in tests, so it
+    # went unnoticed).
     list_display = ('model_class', 'field_name', 'initial_state')
+    list_select_related = ('content_type', 'initial_state')
 
     def model_class(self, obj):
         cls = obj.content_type.model_class()
@@ -57,9 +63,6 @@ class WorkflowAdmin(admin.ModelAdmin):
             return "%s.%s" % (cls.__module__, cls.__name__)
         else:
             return "Class not found in the workspace"
-
-    def field_name(self, obj):  # pylint: disable=no-self-use
-        return obj.workflow.field_name
 
 
 admin.site.register(Workflow, WorkflowAdmin)

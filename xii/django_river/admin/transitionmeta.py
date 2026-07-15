@@ -13,6 +13,7 @@ class TransitionMetaForm(forms.ModelForm):
 class TransitionMetaAdmin(admin.ModelAdmin):
     form = TransitionMetaForm
     list_display = ('workflow', 'source_state', 'destination_state')
+    list_select_related = ('workflow', 'source_state', 'destination_state')
 
 
 admin.site.register(TransitionMeta, TransitionMetaAdmin)
