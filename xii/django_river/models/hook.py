@@ -61,7 +61,30 @@ class Hook(BaseModel):
             )
 
     def execute(self, context):
+        """
+        Entry point used by the signal handlers (xii/django_river/signals.py).
+        Dispatches to RIVER_HOOK_EXECUTOR if one is configured (see
+        xii/django_river/executors.py); otherwise runs synchronously, inline,
+        exactly as before that setting existed.
+        """
+        executor = app_config.HOOK_EXECUTOR
+        if executor:
+            from django.utils.module_loading import import_string
+            import_string(executor)(self, context)
+            return
+        self.execute_now(context)
+
+    def execute_now(self, context):
+        """
+        The actual, synchronous execution of this hook's callback function.
+        Public (not prefixed with `_`) because a custom RIVER_HOOK_EXECUTOR
+        - e.g. one that re-dispatches through Celery - calls back into this
+        from inside its own worker, after rebuilding an equivalent context.
+        """
         try:
+            # RIVER_FUNCTION_TIMEOUT_SECONDS is enforced inside
+            # Function.get() itself (xii/django_river/models/function.py),
+            # so it applies uniformly regardless of caller.
             self.callback_function.get()(context)
         except Exception as e:
             if app_config.STRICT_HOOKS:

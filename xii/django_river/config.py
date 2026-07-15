@@ -22,6 +22,8 @@ class RiverConfig(object):
             'STRICT_HOOKS': False,
             'ALLOW_DB_FUNCTIONS': False,
             'SANDBOX_DB_FUNCTIONS': False,
+            'FUNCTION_TIMEOUT_SECONDS': None,
+            'HOOK_EXECUTOR': None,
         }
 
     def get_with_prefix(self, config):

@@ -5,6 +5,7 @@ from .transitionmeta import *
 from .transitionapprovalmeta import *
 from .transition import *
 from .transitionapproval import *
+from .transition_audit_log import *
 from .function import *
 from .on_approved_hook import *
 from .on_transit_hook import *

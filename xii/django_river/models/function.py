@@ -11,6 +11,7 @@ from django.utils.translation import gettext_lazy as _
 
 from xii.django_river.config import app_config
 from xii.django_river.models import BaseModel
+from xii.django_river.timeout import enforce_timeout
 
 loaded_functions = {}
 
@@ -73,7 +74,19 @@ class Function(BaseModel):
         if not func or func["version"] != self.version or func["body"] != self.body:
             func = {"function": self._load(), "version": self.version, "body": self.body}
             loaded_functions[cache_key] = func
-        return func["function"]
+
+        compiled = func["function"]
+
+        def _timed_call(context):
+            # RIVER_FUNCTION_TIMEOUT_SECONDS applies here rather than at each
+            # call site, so every caller of Function.get() - Hook.execute_now,
+            # a test, or future code - gets it automatically, without having
+            # to know it exists. No-op when the setting is unset (see
+            # xii/django_river/timeout.py).
+            with enforce_timeout(app_config.FUNCTION_TIMEOUT_SECONDS, self.name):
+                return compiled(context)
+
+        return _timed_call
 
     def _cache_key(self):
         # Under schema-per-tenant multitenancy (django-tenants), each tenant

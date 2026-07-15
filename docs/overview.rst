@@ -11,13 +11,19 @@ Main goal of developing this framework is **to be able to edit any workflow item
 
 There is ordering aprovments for a transition functionality in ``xii-django-river``. It also provides skipping specific transition of a specific objects.
 
+This fork additionally provides: an append-only ``TransitionAuditLog`` of every
+approved/cancelled/jumped transition (see :ref:`security_guide`), an opt-in
+wall-clock timeout and a pluggable async executor for DB-stored hook
+functions (see :ref:`hooking_guide`), and a ``manage.py check`` addition
+that flags misconfigured authorization rules and orphaned states.
+
 **Playground**: There is a fake jira example repository as a playground of the original upstream django-river project. https://github.com/javrasya/fakejira
 
-Requirements
-------------
-* Python (``2.7``, ``3.5``, ``3.6``)
-* Django (``1.11``, ``2.0``, ``2.1``, ``2.2``, ``3.0``, ``3.1``)
-* ``Django`` >= 2.0 is supported for ``Python`` >= 3.5
+Requirements (this fork)
+------------------------
+* Python (``3.10``, ``3.11``, ``3.12``, ``3.13``)
+* Django (``4.2``, ``5.0``, ``5.1``, ``5.2``, ``6.0``)
+* ``Django`` >= 6.0 requires ``Python`` >= 3.12
 
 
 Supported (Tested) Databases:

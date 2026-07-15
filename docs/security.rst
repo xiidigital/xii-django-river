@@ -102,10 +102,44 @@ Optional execution sandbox (``RIVER_SANDBOX_DB_FUNCTIONS``, default ``False``)
     fully backward compatible — bodies that rely on ``import`` or on
     reaching things outside the ``context`` argument will need rewriting.
 
+Opt-in wall-clock timeout (``RIVER_FUNCTION_TIMEOUT_SECONDS``, default ``None``/disabled)
+    Bounds how long a ``Function`` body can run before ``Function.get()``'s
+    returned callable raises ``xii.django_river.timeout.FunctionTimeoutError``
+    — independent of, and layered on top of, the sandbox: a sandboxed body
+    still can't ``import``, but nothing stopped ``while True: pass`` before
+    this. Read ``xii/django_river/timeout.py``'s module docstring before
+    relying on it: it's enforced with ``signal.alarm``, which only works in
+    the main thread of the main interpreter (no Windows, no worker threads
+    — including this fork's own ``thread_pool_executor``, below). When it
+    can't be enforced, that's logged once at WARNING rather than silently
+    doing nothing.
+
+Pluggable hook execution (``RIVER_HOOK_EXECUTOR``, default ``None`` / synchronous inline, unchanged)
+    ``Hook.execute()`` dispatches to a configured executor instead of
+    running inline when set — see ``xii/django_river/executors.py``. Ships
+    with ``thread_pool_executor`` (moves execution to a shared background
+    thread, same process, no new infrastructure) as a ready-to-use option;
+    anything else (Celery, RQ, ...) is one small adapter function away,
+    following the documented contract in that module. Trade-off, stated
+    plainly: ``RIVER_STRICT_HOOKS``'s guarantee that a hook exception fails
+    the transition only holds for the synchronous default — once a hook
+    runs off-thread/off-process there is no call stack left to propagate
+    into, by construction, for any executor. See :ref:`hooking_guide` for a
+    worked example.
+
+Transition-level audit trail (``TransitionAuditLog``)
+    Every APPROVED, CANCELLED, and JUMPED event on a workflow object is
+    appended (never updated in place, unlike ``TransitionApproval``) with
+    who did it (when there is a "who" — ``jump_to``'s actor is optional)
+    and when. Read-only in the admin, like ``FunctionRevision``.
+
 Test coverage: ``xii/django_river/tests/test__function_gate.py``,
 ``xii/django_river/tests/test__function_approval.py``,
 ``xii/django_river/tests/test__hook_approval_gate.py``,
-``xii/django_river/tests/test__function_sandbox.py``.
+``xii/django_river/tests/test__function_sandbox.py``,
+``xii/django_river/tests/test__function_timeout.py``,
+``xii/django_river/tests/test__hook_executor.py``,
+``xii/django_river/tests/test__transition_audit_log.py``.
 
 What this still does NOT do
 ----------------------------
@@ -136,11 +170,14 @@ No database-level tenant isolation
     — this is infrastructure the consuming project owns, not something
     ``xii-django-river`` can implement from inside the ORM.
 
-No resource limits
-    Enforce this outside ``xii-django-river`` if it matters for your
-    deployment: a timeout wrapper around ``Function.get()(context)``, or
-    running hook execution in a separate worker process with
-    ``resource.setrlimit``.
+No CPU/memory limits, and the wall-clock timeout has real gaps
+    ``RIVER_FUNCTION_TIMEOUT_SECONDS`` (above) bounds wall-clock time in the
+    common case (synchronous request, main thread), but enforces nothing on
+    a worker thread (the built-in ``thread_pool_executor`` included) or a
+    non-Unix platform, and never limits CPU or memory. For a real resource
+    ceiling regardless of thread/platform, run hook execution in a separate
+    worker process with ``resource.setrlimit``, or a container-level limit
+    (cgroups) around the worker process entirely.
 
 Threat models: what to configure depending on who authors ``Function``\ s
 ---------------------------------------------------------------------------

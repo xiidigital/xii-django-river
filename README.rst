@@ -90,6 +90,16 @@ This fork modernizes django-river 3.3.0 for current Django. Highlights:
   - ``RIVER_SANDBOX_DB_FUNCTIONS`` (default ``False``): compiles
     ``Function`` bodies through RestrictedPython instead of plain
     ``exec()`` (``pip install xii-django-river[sandbox]``).
+  - ``RIVER_FUNCTION_TIMEOUT_SECONDS`` (default ``None``/disabled): wall-clock
+    timeout for a ``Function`` body, raising ``FunctionTimeoutError`` if
+    exceeded. See `SECURITY.md`_ for the (real) platform/threading limits
+    of how this is enforced.
+  - ``RIVER_HOOK_EXECUTOR`` (default ``None``/synchronous inline): dotted
+    path to a callable that changes how ``Hook.execute()`` runs a hook —
+    e.g. ``xii.django_river.executors.thread_pool_executor`` to move it off
+    the request thread with no extra infrastructure, or your own adapter
+    around Celery/RQ/whatever this project already uses. See
+    ``xii/django_river/executors.py`` for the contract.
 * ``xii_django_river.Function`` now supports a review workflow: ``is_approved``,
   the ``xii_django_river.approve_function`` / ``xii_django_river.self_approve_function``
   permissions, and an immutable ``FunctionRevision`` audit trail with
@@ -97,6 +107,15 @@ This fork modernizes django-river 3.3.0 for current Django. Highlights:
   ``Hook.save()`` refuses to attach a ``Hook`` to an unapproved
   ``Function``. See `SECURITY.md`_ for the full threat model and what is
   (and isn't) covered by this fork's mitigations.
+* ``TransitionAuditLog``: an immutable, append-only record of every
+  APPROVED/CANCELLED/JUMPED event on a workflow object (who, when), read-only
+  in the admin. Complements ``TransitionApproval``, whose rows are mutated
+  in place rather than appended to.
+* ``check_workflow_configuration``: a ``manage.py check`` addition that
+  flags transitions with no authorization rule at all (approvable by any
+  authenticated user as configured — see ``OrmDriver._authorized_approvals``),
+  explicit rules with neither permissions nor groups, and orphaned states
+  (unused by any transition or workflow).
 
 .. _`SECURITY.md`: SECURITY.md
 
