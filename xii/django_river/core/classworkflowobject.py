@@ -2,7 +2,7 @@ from django.contrib.contenttypes.models import ContentType
 
 from xii.django_river.driver.mssql_driver import MsSqlDriver
 from xii.django_river.driver.orm_driver import OrmDriver
-from xii.django_river.models import State, TransitionApprovalMeta, Workflow, app_config, TransitionMeta
+from xii.django_river.models import State, Workflow, app_config, TransitionMeta
 
 
 class ClassWorkflowObject(object):

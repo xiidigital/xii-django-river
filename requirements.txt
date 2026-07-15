@@ -3,3 +3,4 @@ django-cte>=3.0
 factory-boy>=3.3
 pyhamcrest>=2.0
 behave-django>=1.4
+RestrictedPython>=6.0

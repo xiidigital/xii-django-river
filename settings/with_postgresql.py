@@ -6,7 +6,7 @@ DB_HOST = os.environ['POSTGRES_HOST']
 DB_PORT = os.environ['POSTGRES_5432_TCP_PORT']
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'river',
         'USER': 'river',
         'PASSWORD': 'river',
