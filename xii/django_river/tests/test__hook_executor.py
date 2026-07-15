@@ -1,5 +1,4 @@
 import threading
-import time
 from unittest import mock
 
 from django.contrib.contenttypes.models import ContentType

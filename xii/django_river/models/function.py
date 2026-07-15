@@ -248,11 +248,19 @@ def create_function(callback):
     auto-approved: there is nothing for a reviewer to sign off on that
     wasn't already reviewed as a normal pull request.
     """
-    function, created = Function.objects.get_or_create(
-        name=callback.__module__ + "." + callback.__name__,
-        body=_normalize_callback(callback)
-    )
-    if created and not function.is_approved:
+    name = callback.__module__ + "." + callback.__name__
+    body = _normalize_callback(callback)
+    # Looked up by `name` alone (it's the unique key), not by (name, body):
+    # get_or_create(name=name, body=body) would, on a normal code edit that
+    # changes the body but keeps the same name, find no existing row
+    # matching both fields and then try to `create()` a second row with the
+    # same `name` - crashing on the unique constraint instead of updating
+    # the existing Function like this helper is meant to.
+    function, created = Function.objects.get_or_create(name=name, defaults={"body": body})
+    if not created and function.body != body:
+        function.body = body
+        function.save()  # on_pre_save bumps version and resets is_approved
+    if not function.is_approved:
         function.is_approved = True
         function.approved_at = timezone.now()
         function.save(update_fields=["is_approved", "approved_at"])

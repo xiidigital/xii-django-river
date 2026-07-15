@@ -7,7 +7,7 @@ from django.db.transaction import atomic
 from django.utils import timezone
 
 from xii.django_river.config import app_config
-from xii.django_river.models import TransitionApproval, PENDING, State, APPROVED, Workflow, CANCELLED, Transition, DONE, JUMPED
+from xii.django_river.models import TransitionApproval, PENDING, State, APPROVED, CANCELLED, Transition, DONE, JUMPED
 from xii.django_river.models.transition_audit_log import TransitionAuditLog, username_snapshot
 from xii.django_river.signals import ApproveSignal, TransitionSignal, OnCompleteSignal
 from xii.django_river.utils.error_code import ErrorCode
@@ -23,7 +23,10 @@ class InstanceWorkflowObject(object):
         self.workflow_object = workflow_object
         self.content_type = app_config.CONTENT_TYPE_CLASS.objects.get_for_model(self.workflow_object)
         self.field_name = field_name
-        self.workflow = Workflow.objects.filter(content_type=self.content_type, field_name=self.field_name).first()
+        # self.class_workflow (built above) already ran this exact
+        # Workflow.objects.filter(content_type=..., field_name=...).first()
+        # lookup in its own __init__ - reuse it instead of querying twice.
+        self.workflow = self.class_workflow.workflow
         self.initialized = False
 
     @transaction.atomic

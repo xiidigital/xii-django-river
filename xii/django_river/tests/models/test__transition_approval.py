@@ -2,10 +2,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models import ProtectedError
 from django.test import TestCase
 from hamcrest import assert_that, calling, raises
-from xii.django_river.models import APPROVED, TransitionApproval
-from xii.django_river.models.factories import StateObjectFactory, TransitionApprovalMetaFactory, TransitionMetaFactory, WorkflowFactory
 from xii.django_river.tests.models import BasicTestModel
-from xii.django_river.tests.models.factories import BasicTestModelObjectFactory
 
 # noinspection PyMethodMayBeStatic,DuplicatedCode
 from rivertest.flowbuilder import FlowBuilder, RawState
