@@ -49,8 +49,18 @@ class RiverApp(AppConfig):
         registered_admin = admin.site._registry.get(model, None)
         if registered_admin:
             if OnApprovedHookInline not in registered_admin.inlines:
-                registered_admin.inlines = list(set(list(registered_admin.inlines) + [OnApprovedHookInline, OnTransitHookInline, OnCompleteHookInline]))
-                registered_admin.readonly_fields = list(set(list(registered_admin.readonly_fields) + list(workflow_registry.get_class_fields(model))))
+                # dict.fromkeys(...) dedupes while preserving insertion
+                # order - unlike the set() this replaced, which reshuffles
+                # column/inline order on every process restart (Python's
+                # hash randomization salts str/class hashing per-process),
+                # producing a different-looking admin on every deploy for
+                # no functional reason.
+                registered_admin.inlines = list(dict.fromkeys(
+                    list(registered_admin.inlines) + [OnApprovedHookInline, OnTransitHookInline, OnCompleteHookInline]
+                ))
+                registered_admin.readonly_fields = list(dict.fromkeys(
+                    list(registered_admin.readonly_fields) + list(workflow_registry.get_class_fields(model))
+                ))
                 admin.site._registry[model] = registered_admin
         else:
             admin.site.register(model, DefaultWorkflowModelAdmin)

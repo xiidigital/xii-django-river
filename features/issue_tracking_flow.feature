@@ -106,3 +106,12 @@ Feature: An example issue tracking flow that is set up with django-river
     When "the bug" is attempted to be approved by developer_1
     And get current state of "the bug"
     Then return current state as "In Progress"
+
+  # Regression: deleting an object that has an approved transition used to
+  # crash with ProtectedError instead of deleting cleanly (see TECH_DEBT.md,
+  # migration 0003_alter_transitionapproval_transition).
+  Scenario: Should delete the bug cleanly after it has an approved transition
+    Given a bug "Fix button look on the home page" identifier "the bug"
+    When "the bug" is attempted to be approved by developer_1
+    And "the bug" is deleted
+    Then "the bug" no longer exists

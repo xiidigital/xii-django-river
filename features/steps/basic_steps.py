@@ -159,3 +159,19 @@ def check_output_count(context, number):
 @then('return current state as "{state_name:ws}"')
 def check_current_state(context, state_name):
     assert_that(context.current_state.label, is_(state_name))
+
+
+@when('"{workflow_object_identifier:ws}" is deleted')
+def delete_workflow_object(context, workflow_object_identifier):
+    from xii.django_river.tests.models import BasicTestModel
+
+    workflow_object = getattr(context, "workflow_objects", {})[workflow_object_identifier]
+    BasicTestModel.objects.get(pk=workflow_object.pk).delete()
+
+
+@then('"{workflow_object_identifier:ws}" no longer exists')
+def check_workflow_object_deleted(context, workflow_object_identifier):
+    from xii.django_river.tests.models import BasicTestModel
+
+    workflow_object = getattr(context, "workflow_objects", {})[workflow_object_identifier]
+    assert_that(BasicTestModel.objects.filter(pk=workflow_object.pk).exists(), is_(False))
