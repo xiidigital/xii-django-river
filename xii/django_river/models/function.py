@@ -143,11 +143,13 @@ class FunctionRevision(BaseModel):
     ACTION_UPDATED = "UPDATED"
     ACTION_APPROVED = "APPROVED"
     ACTION_SELF_APPROVED = "SELF_APPROVED"
+    ACTION_AUTO_APPROVED = "AUTO_APPROVED"
     ACTION_CHOICES = [
         (ACTION_CREATED, _("Created")),
         (ACTION_UPDATED, _("Updated")),
         (ACTION_APPROVED, _("Approved")),
         (ACTION_SELF_APPROVED, _("Self-approved")),
+        (ACTION_AUTO_APPROVED, _("Auto-approved (create_function)")),
     ]
 
     function = models.ForeignKey(Function, verbose_name=_("Function"), related_name="revisions", on_delete=models.CASCADE)
@@ -236,7 +238,7 @@ post_save.connect(on_post_save, Function)
 def _normalize_callback(callback):
     callback_str = inspect.getsource(callback).replace("def %s(" % callback.__name__, "def handle(")
     space_size = callback_str.index('def handle(')
-    return re.sub(r'^\s{%s}' % space_size, '', inspect.getsource(callback).replace("def %s(" % callback.__name__, "def handle("))
+    return re.sub(r'^\s{%s}' % space_size, '', callback_str)
 
 
 def create_function(callback):
@@ -247,6 +249,17 @@ def create_function(callback):
     comes from source code rather than a hand-typed admin edit, it is
     auto-approved: there is nothing for a reviewer to sign off on that
     wasn't already reviewed as a normal pull request.
+
+    ``approved_by`` is deliberately left ``None`` - there is no human
+    reviewer to attribute this to, and inventing one (e.g. a "system" user)
+    would misrepresent the audit trail. What *is* recorded is a
+    ``FunctionRevision`` with ``action=ACTION_AUTO_APPROVED``, so the
+    revision history makes it unambiguous that this approval came from
+    ``create_function`` rather than a human clicking "approve" (previously
+    this path set ``is_approved``/``approved_at`` directly and left no
+    revision row at all for the approval step - only for the initial
+    CREATED/UPDATED one - making it indistinguishable from a `Function`
+    that was simply never put through any approval flow at all).
     """
     name = callback.__module__ + "." + callback.__name__
     body = _normalize_callback(callback)
@@ -264,4 +277,13 @@ def create_function(callback):
         function.is_approved = True
         function.approved_at = timezone.now()
         function.save(update_fields=["is_approved", "approved_at"])
+        FunctionRevision.objects.create(
+            function=function,
+            version=function.version,
+            action=FunctionRevision.ACTION_AUTO_APPROVED,
+            body=function.body,
+            diff="",
+            changed_by=None,
+            changed_by_username="",
+        )
     return function

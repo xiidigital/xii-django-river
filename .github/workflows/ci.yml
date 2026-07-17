@@ -29,7 +29,18 @@ jobs:
       - name: Check for missing migrations
         run: python manage.py makemigrations xii_django_river --check --dry-run --settings=settings.for_migrations_check
       - name: Run tests
-        run: python manage.py test xii.django_river --settings=settings.with_sqlite3
+        # --top-level-directory=. is required: `xii` is a PEP 420 namespace
+        # package (no __init__.py, shared with xii-django-river-admin), and
+        # without this flag unittest's dotted-label discovery auto-detects
+        # the top-level dir by walking up from the label looking for
+        # __init__.py - it stops one level too early at xii/django_river
+        # (which does have one) instead of continuing to xii/, and
+        # re-imports every test module a second time under the wrong
+        # qualified name (django_river.tests.* instead of
+        # xii.django_river.tests.*), which then collides with the app
+        # registered under xii.django_river in INSTALLED_APPS. Passing the
+        # real top-level dir explicitly skips that auto-detection entirely.
+        run: python manage.py test xii.django_river --top-level-directory=. --settings=settings.with_sqlite3
 
   bdd:
     runs-on: ubuntu-latest

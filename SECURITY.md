@@ -74,16 +74,30 @@ threat model. Nothing here is specific to any one deployment.
   from plain ORM code. This turns "the hook silently never runs because
   its Function isn't approved" from a runtime mystery (previously only
   visible in logs, and only then if `RIVER_STRICT_HOOKS=True`) into an
-  immediate, explicit configuration error.
+  immediate, explicit configuration error. This only covers the moment the
+  `Hook` is saved, though — editing that `Function`'s body afterwards
+  resets `is_approved` (see `on_pre_save` above) without touching any
+  `Hook` that already points to it, leaving it silently pointing at code
+  that is no longer approved. System check **`xii_django_river.W005`**
+  (`RiverApp.ready()` / `check_hooks_with_unapproved_functions`) surfaces
+  exactly that case ahead of time, since `Hook.execute()` will still refuse
+  to run it at that point but nothing else would tell you until it does.
 
 - **Optional execution sandbox (`RIVER_SANDBOX_DB_FUNCTIONS`, default
   `False`)**. When enabled (`pip install xii-django-river[sandbox]`),
   `Function` bodies compile through
   [RestrictedPython](https://restrictedpython.readthedocs.io/) instead of
   plain `exec()`: no `import` statements resolve (no `__import__` in the
-  restricted builtins), no dunder attribute access compiles at all (blocks
-  the classic `().__class__.__bases__[0].__subclasses__()` sandbox escape
-  at the source level, before it would even run), and `__builtins__` is
+  restricted builtins), no dunder attribute access *spelled directly in the
+  source* compiles at all (blocks the classic
+  `().__class__.__bases__[0].__subclasses__()` sandbox escape at the source
+  level, before it would even run), attribute access at runtime goes through
+  `RestrictedPython.Guards.safer_getattr` (rejects any attribute name
+  starting with `_` at call time, regardless of how that name was
+  constructed — this additionally blocks *indirect* dunder access, e.g.
+  `"{0.__class__}".format(context)`, which reaches `__class__` through
+  `str.format`'s own C-level attribute lookup and would otherwise never
+  touch the source-level dunder check at all), and `__builtins__` is
   replaced with RestrictedPython's `safe_builtins` (no `open`, `eval`,
   `exec`, `compile`, `__import__`). See `xii/django_river/sandbox.py`. This is opt-in
   and not fully backward compatible — bodies that rely on `import` or on

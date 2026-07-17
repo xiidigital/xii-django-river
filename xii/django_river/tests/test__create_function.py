@@ -1,7 +1,7 @@
 from django.test import TestCase
-from hamcrest import assert_that, equal_to, is_not
+from hamcrest import assert_that, equal_to, is_not, none
 
-from xii.django_river.models.function import Function, create_function
+from xii.django_river.models.function import Function, FunctionRevision, create_function
 
 
 class CreateFunctionTest(TestCase):
@@ -46,3 +46,28 @@ class CreateFunctionTest(TestCase):
         context = {}
         second.get()(context)
         assert_that(context.get("version"), equal_to(2))
+
+    def test_autoApprovalIsRecordedAsARevisionNotJustAFieldFlip(self):
+        """
+        Regression test: create_function() used to set is_approved/approved_at
+        directly on the Function row without writing a FunctionRevision for
+        the approval step - only the initial CREATED/UPDATED revision existed.
+        That made a create_function()-approved Function indistinguishable,
+        from the revision history alone, from one that never went through any
+        approval flow at all. approved_by is deliberately left None (there is
+        no human reviewer to attribute this to); what must exist instead is an
+        explicit AUTO_APPROVED revision.
+        """
+        def _callback(context):
+            context["touched"] = True
+
+        function = create_function(_callback)
+
+        assert_that(function.is_approved, equal_to(True))
+        assert_that(function.approved_by, none())
+
+        auto_approved_revisions = FunctionRevision.objects.filter(
+            function=function, action=FunctionRevision.ACTION_AUTO_APPROVED
+        )
+        assert_that(auto_approved_revisions.count(), equal_to(1))
+        assert_that(auto_approved_revisions.first().changed_by, none())

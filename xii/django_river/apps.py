@@ -17,6 +17,8 @@ class RiverApp(AppConfig):
     def ready(self):
         checks.register(check_workflow_definitions, checks.Tags.database)
         checks.register(check_workflow_configuration, checks.Tags.database)
+        checks.register(check_hooks_with_unapproved_functions, checks.Tags.database)
+        checks.register(check_timeout_with_offthread_executor, checks.Tags.compatibility)
 
         from xii.django_river.config import app_config
 
@@ -149,4 +151,69 @@ def check_workflow_configuration(app_configs, **kwargs):
             ))
     except (OperationalError, ProgrammingError):
         pass
+    return warnings
+
+
+def check_hooks_with_unapproved_functions(app_configs, **kwargs):
+    """
+    Hook.save() (xii/django_river/models/hook.py) only validates that its
+    callback_function is approved at the moment the Hook itself is saved.
+    Editing that Function's body afterwards resets is_approved to False
+    (Function's on_pre_save) without touching any Hook that already points
+    to it - the Hook row is left in place, silently pointing at code that
+    is no longer approved to run. Hook.execute() -> Function.get() does
+    still refuse to run it (raises ImproperlyConfigured), but nothing
+    surfaces that fact until the hook actually fires and someone is
+    watching logs (or RIVER_STRICT_HOOKS is on and it blocks a transition).
+    This check makes that misconfiguration visible ahead of time instead.
+    """
+    from xii.django_river.models import OnApprovedHook, OnTransitHook, OnCompleteHook
+
+    warnings = []
+    try:
+        for hook_model in (OnApprovedHook, OnTransitHook, OnCompleteHook):
+            unapproved = hook_model.objects.filter(
+                callback_function__is_approved=False
+            ).select_related('callback_function', 'workflow')
+            for hook in unapproved:
+                warnings.append(checks.Warning(
+                    "%s #%s in workflow '%s' points at function '%s', which is not "
+                    "approved. Hook.execute() will refuse to run it "
+                    "(ImproperlyConfigured) until the function is approved again." % (
+                        hook_model.__name__, hook.pk, hook.workflow, hook.callback_function),
+                    obj=hook,
+                    id='xii_django_river.W005',
+                ))
+    except (OperationalError, ProgrammingError):
+        pass
+    return warnings
+
+
+def check_timeout_with_offthread_executor(app_configs, **kwargs):
+    """
+    RIVER_FUNCTION_TIMEOUT_SECONDS (xii/django_river/timeout.py) is enforced
+    with signal.alarm, which only works in the main thread of the main
+    interpreter. RIVER_HOOK_EXECUTOR set to anything other than the
+    synchronous default (unset) moves Hook.execute_now() off that thread -
+    the built-in thread_pool_executor documents this explicitly in its own
+    docstring (xii/django_river/executors.py), but a custom executor
+    pointing at Celery/RQ/etc. has the identical problem and nothing
+    connects the two settings for someone configuring them independently.
+    This is a settings-only check (no DB access), so it runs under
+    Tags.compatibility rather than Tags.database like the others here.
+    """
+    from xii.django_river.config import app_config
+
+    warnings = []
+    if app_config.FUNCTION_TIMEOUT_SECONDS and app_config.HOOK_EXECUTOR:
+        warnings.append(checks.Warning(
+            "RIVER_FUNCTION_TIMEOUT_SECONDS is set together with RIVER_HOOK_EXECUTOR "
+            "('%s'). The timeout is enforced with signal.alarm, which only works on "
+            "the main thread of the main interpreter - once RIVER_HOOK_EXECUTOR moves "
+            "hook execution off that thread (or out of process), the timeout silently "
+            "stops applying. A hung Function body will hang the executor's own "
+            "thread/worker instead of being cut off." % app_config.HOOK_EXECUTOR,
+            obj='xii_django_river',
+            id='xii_django_river.W006',
+        ))
     return warnings

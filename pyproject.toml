@@ -39,7 +39,8 @@ mssql = ["mssql-django>=1.4", "pyodbc"]
 sandbox = ["RestrictedPython>=6.0"]
 
 [tool.setuptools.packages.find]
-include = ["xii", "xii.django_river*"]
+namespaces = true
+include = ["xii.django_river*"]
 exclude = ["xii.django_river.tests*"]
 
 [tool.setuptools.package-data]

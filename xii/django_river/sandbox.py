@@ -19,6 +19,7 @@ try:
         guarded_iter_unpack_sequence,
         guarded_unpack_sequence,
         safe_builtins,
+        safer_getattr,
     )
     from RestrictedPython.PrintCollector import PrintCollector
 
@@ -28,16 +29,24 @@ except ImportError:
 
 
 def _build_restricted_globals():
-    # `_getattr_` is intentionally the plain builtin `getattr`: RestrictedPython's
-    # compiler already rejects any *source-level* attribute name starting with
-    # "_" (the `().__class__.__bases__[0].__subclasses__()` escape and friends)
-    # before this ever runs, so `handle()` simply cannot spell a dunder lookup
-    # to begin with. `__builtins__` is replaced wholesale with `safe_builtins`
-    # (no `open`, `__import__`, `eval`, `exec`, `compile`, ...), so there is no
-    # path to the filesystem, network, or another `exec` from inside the body.
+    # `_getattr_` is `RestrictedPython.Guards.safer_getattr`, NOT the plain
+    # builtin `getattr`. The compiler-level guard (rejecting any *source-level*
+    # attribute name starting with "_", e.g. `().__class__`) only blocks a
+    # dunder lookup spelled directly in the body's source - it does nothing
+    # about a dunder name assembled at runtime and handed to `getattr`
+    # indirectly, which is exactly what `str.format` does internally:
+    # `"{0.__class__}".format(context)` reaches `__class__` via CPython's own
+    # C-level attribute lookup inside `format()`, never touching the AST
+    # transform that blocks source-level dunders. `safer_getattr` closes that
+    # gap by rejecting any name starting with "_" *at call time*, regardless
+    # of how the name was constructed - so this still fails even via
+    # `str.format`, `getattr(obj, computed_name)`, etc. `__builtins__` is
+    # replaced wholesale with `safe_builtins` (no `open`, `__import__`,
+    # `eval`, `exec`, `compile`, ...), so there is no path to the filesystem,
+    # network, or another `exec` from inside the body either.
     return {
         "__builtins__": dict(safe_builtins),
-        "_getattr_": getattr,
+        "_getattr_": safer_getattr,
         "_getitem_": default_guarded_getitem,
         "_getiter_": default_guarded_getiter,
         "_iter_unpack_sequence_": guarded_iter_unpack_sequence,
