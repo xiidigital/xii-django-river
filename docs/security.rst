@@ -88,17 +88,32 @@ Per-schema cache isolation
     from plain ORM code. This turns "the hook silently never runs because
     its Function isn't approved" from a runtime mystery (previously only
     visible in logs, and only then if ``RIVER_STRICT_HOOKS=True``) into an
-    immediate, explicit configuration error.
+    immediate, explicit configuration error. This only covers the moment
+    the ``Hook`` is saved, though — editing that ``Function``'s body
+    afterwards resets ``is_approved`` without touching any ``Hook`` that
+    already points to it, leaving it silently pointing at code that is no
+    longer approved. System check ``xii_django_river.W005``
+    (``RiverApp.ready()`` / ``check_hooks_with_unapproved_functions``)
+    surfaces exactly that case ahead of time, since ``Hook.execute()`` will
+    still refuse to run it at that point but nothing else would tell you
+    until it does.
 
 Optional execution sandbox (``RIVER_SANDBOX_DB_FUNCTIONS``, default ``False``)
     When enabled (``pip install xii-django-river[sandbox]``), ``Function``
     bodies compile through `RestrictedPython
     <https://restrictedpython.readthedocs.io/>`_ instead of plain
     ``exec()``: no ``import`` statements resolve, no dunder attribute
-    access compiles at all (blocks the classic
-    ``().__class__.__bases__[0].__subclasses__()`` sandbox escape at the
-    source level), and ``__builtins__`` is replaced with RestrictedPython's
-    ``safe_builtins``. See ``xii/django_river/sandbox.py``. This is opt-in and not
+    access *spelled directly in the source* compiles at all (blocks the
+    classic ``().__class__.__bases__[0].__subclasses__()`` sandbox escape
+    at the source level, before it would even run), attribute access at
+    runtime goes through ``RestrictedPython.Guards.safer_getattr`` (rejects
+    any attribute name starting with ``_`` at call time, regardless of how
+    that name was constructed — this additionally blocks *indirect* dunder
+    access, e.g. ``"{0.__class__}".format(context)``, which reaches
+    ``__class__`` through ``str.format``'s own C-level attribute lookup and
+    would otherwise never touch the source-level dunder check at all), and
+    ``__builtins__`` is replaced with RestrictedPython's ``safe_builtins``.
+    See ``xii/django_river/sandbox.py``. This is opt-in and not
     fully backward compatible — bodies that rely on ``import`` or on
     reaching things outside the ``context`` argument will need rewriting.
 
@@ -112,7 +127,12 @@ Opt-in wall-clock timeout (``RIVER_FUNCTION_TIMEOUT_SECONDS``, default ``None``/
     the main thread of the main interpreter (no Windows, no worker threads
     — including this fork's own ``thread_pool_executor``, below). When it
     can't be enforced, that's logged once at WARNING rather than silently
-    doing nothing.
+    doing nothing. System check ``xii_django_river.W006``
+    (``check_timeout_with_offthread_executor``) flags the specific
+    combination of this setting together with ``RIVER_HOOK_EXECUTOR`` set to
+    anything other than the synchronous default, since moving hook
+    execution off-thread/off-process silently defeats the ``signal.alarm``
+    enforcement described above.
 
 Pluggable hook execution (``RIVER_HOOK_EXECUTOR``, default ``None`` / synchronous inline, unchanged)
     ``Hook.execute()`` dispatches to a configured executor instead of

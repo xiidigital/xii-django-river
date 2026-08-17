@@ -120,7 +120,12 @@ threat model. Nothing here is specific to any one deployment.
   it's enforced with `signal.alarm`, which only works in the main thread of
   the main interpreter (no Windows, no worker threads — including this
   fork's own `thread_pool_executor`, see below). When it can't be enforced,
-  that's logged once at WARNING rather than silently doing nothing.
+  that's logged once at WARNING rather than silently doing nothing. System
+  check **`xii_django_river.W006`** (`check_timeout_with_offthread_executor`)
+  flags the specific combination of this setting together with
+  `RIVER_HOOK_EXECUTOR` set to anything other than the synchronous default,
+  since moving hook execution off-thread/off-process silently defeats the
+  `signal.alarm` enforcement described above.
 
 - **Pluggable hook execution (`RIVER_HOOK_EXECUTOR`, default `None` /
   synchronous inline, unchanged).** `Hook.execute()` dispatches to a
