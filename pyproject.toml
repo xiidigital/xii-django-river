@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "xii-django-river"
-version = "4.0.0"
+version = "4.0.1"
 description = "Django Workflow Library (XII Digital fork of django-river)"
 readme = "README.rst"
 license = { text = "BSD" }
