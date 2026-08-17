@@ -75,13 +75,34 @@ exactly.
 
 ### 3. Enable required status checks on `master`
 
-Make sure the existing `ci.yml` jobs (`test`, `bdd`) are set as **required
-status checks** for `master` under **Settings → Branches → Branch
-protection rules**. Without this, nothing stops the release PR (or any PR)
-from being merged with a red CI run.
+Make sure `ci.yml`'s jobs are set as **required status checks** for `master`
+under **Settings → Branches → Branch protection rules**. Rather than
+selecting every individual `test` matrix combination (fragile — the exact
+set of check names changes any time the Python/Django matrix changes),
+`ci.yml` has a trailer job, `ci-passed`, that `needs:` every `test`
+combination plus `bdd` and fails if any of them failed. Require only
+`ci-passed`. Without this, nothing stops the release PR (or any PR) from
+being merged with a red CI run.
 
-That's the entire one-time setup. Steps 1–2 need a human with the right
-PyPI/GitHub permissions; nothing here can be scripted from this repo.
+Note: `ci-passed` (or any new check) only appears in the picker once it has
+run at least once against the repo — push the workflow first, then come
+back and select it.
+
+### 4. Allow Actions to create and approve pull requests
+
+By default a repo's `GITHUB_TOKEN` is not allowed to open pull requests,
+regardless of what `permissions:` a workflow file declares — this is a
+repo-wide setting, and `release-please.yml` needs it to open its
+"chore(master): release X.Y.Z" PR. Without it, `release-please.yml` fails
+with `GitHub Actions is not permitted to create or approve pull requests.`
+
+1. **Settings → Actions → General → Workflow permissions**.
+2. Select **"Read and write permissions"**.
+3. Tick **"Allow GitHub Actions to create and approve pull requests"**.
+4. **Save**.
+
+That's the entire one-time setup. All four steps need a human with the
+right PyPI/GitHub permissions; nothing here can be scripted from this repo.
 
 ## Day to day: what you actually do
 
