@@ -1,0 +1,63 @@
+name: Publish to PyPI
+
+# GitOps release automation, step 2 of 2 (see release-please.yml for step 1).
+#
+# Triggered when release-please creates and publishes a GitHub Release
+# (after its release PR is merged into master). Builds the sdist+wheel and
+# uploads them to PyPI via Trusted Publishing (OIDC) - no PyPI username,
+# password, or API token stored anywhere in this repo or its secrets.
+#
+# One-time setup this depends on (see RELEASING.md for full details):
+#   1. A "pending publisher" registered on PyPI for this exact
+#      owner/repo/workflow-filename/environment combination, since the
+#      xii-django-river project doesn't exist on PyPI yet - PyPI creates the
+#      project automatically the first time this workflow successfully
+#      publishes through it.
+#   2. A GitHub "pypi" Environment on this repository (Settings ->
+#      Environments), ideally with required reviewers, so every publish to
+#      PyPI needs a human to click "approve" even though the version bump
+#      and tagging themselves are fully automated.
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install build tooling
+        run: python -m pip install --upgrade pip build twine
+      - name: Build sdist and wheel
+        run: python -m build
+      - name: Sanity-check the built distributions
+        run: twine check dist/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/xii-django-river/
+    permissions:
+      # Required for PyPI Trusted Publishing - this is the OIDC token GitHub
+      # mints for the job, which PyPI exchanges for a short-lived upload
+      # credential. No secrets.PYPI_* of any kind needed.
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1

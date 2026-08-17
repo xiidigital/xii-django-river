@@ -19,7 +19,7 @@ requires a re-deploying of your application anymore.
 About this fork
 ----------------
 ``xii-django-river`` is a fork of `django-river <https://github.com/javrasya/django-river>`_
-by Ahmet DAL, maintained by `XII Digital <https://github.com/xiidigital/xii-django-river>`_.
+by Ahmet DAL, maintained by `XII Digital <https://github.com/xiidigital/xii-django-river>`__.
 It was forked to (1) modernize the library for current Django (``4.2``-``6.0``) and Python
 (``3.10``-``3.13``), and (2) add a security hardening layer around ``xii_django_river.Function``, which
 stores Python code as text in the database and executes it via ``exec()``. That's a deliberate
@@ -50,7 +50,7 @@ Documentation
 
 Online documentation for the original upstream project is available at http://django-river.rtfd.org/.
 This fork does not yet publish its own hosted docs; see the ``docs/`` directory in this
-repository for fork-specific documentation (including :ref:`security_guide`).
+repository for fork-specific documentation, including the security guide (``docs/security.rst``).
 
 Advance Admin
 -------------
@@ -330,10 +330,19 @@ Have a look at `FAQ`_ (documentation inherited from the original upstream projec
 
 .. _`FAQ`: https://django-river.readthedocs.io/en/latest/faq.html
 
+Releasing
+=========
+
+Versioning, tagging, and publishing to PyPI are fully automated from
+`Conventional Commits <https://www.conventionalcommits.org/>`_ on
+``master`` via `release-please <https://github.com/googleapis/release-please>`_
+and PyPI Trusted Publishing — see `RELEASING.md <RELEASING.md>`_ for the
+full pipeline and the one-time setup it depends on.
+
 Contributors
 ============
 
-This fork (``xii-django-river``) is maintained by `XII Digital <https://github.com/xiidigital>`_.
+This fork (``xii-django-river``) is maintained by `XII Digital <https://github.com/xiidigital>`__.
 The section below credits the contributors to the **original upstream ``django-river``
 project**, whose work this fork builds on.
 
