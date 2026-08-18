@@ -14,8 +14,27 @@ class OrmDriver(RiverDriver):
             TransitionApproval.objects.filter(
                 workflow=self.workflow, status=PENDING
             ).values(
-                'workflow', 'object_id', 'transition'
-            ).annotate(min_priority=Min('priority'))
+                'object_id'
+            ).annotate(
+                # `workflow=F('workflow_id')` / `transition=F('transition_id')`
+                # instead of putting 'workflow'/'transition' in .values():
+                # Django's SQL compiler only aliases a plain values()'d FK
+                # column to match its values()-name (e.g. "transition_id"
+                # AS "transition") on Django >= 5.0. On Django 4.2 it emits
+                # the bare column name ("transition_id") with no alias, so
+                # `those_with_max_priority.col.workflow` /
+                # `.col.transition` below - which always resolve to
+                # `cte."workflow"` / `cte."transition"` - referenced
+                # columns that didn't exist under 4.2 (OperationalError:
+                # no such column: cte.workflow / cte.transition).
+                # ('object_id' isn't an FK - its values()-name already
+                # matches its db column name, so it doesn't need this.)
+                # An explicit annotate() alias forces the "AS workflow" /
+                # "AS transition" on every supported Django version.
+                workflow=F('workflow_id'),
+                transition=F('transition_id'),
+                min_priority=Min('priority'),
+            )
         )
 
         workflow_objects = CTE(
