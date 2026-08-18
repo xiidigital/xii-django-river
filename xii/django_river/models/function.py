@@ -128,8 +128,21 @@ class Function(BaseModel):
         for line in self.body.split("\n"):
             func_body += "\t" + line + "\n"
         func_body += "\thandle(context)\n"
-        exec(func_body)
-        return eval("_wrapper")
+        # `exec(func_body)` followed by a bare `eval("_wrapper")` used to
+        # work because, with no explicit globals/locals given, both calls
+        # implicitly shared this frame's locals(). Python 3.13 (PEP 667,
+        # "consistent views of namespaces") changed locals() on function
+        # frames to return a fresh snapshot dict on every call instead of
+        # a mutable proxy shared across calls in the same frame, so the
+        # name `_wrapper` that exec() wrote into its snapshot was already
+        # gone by the time eval() asked for its own snapshot -
+        # NameError: name '_wrapper' is not defined, on every single
+        # river.Function invocation under 3.13+. Passing one explicit
+        # dict as the namespace for both calls removes the dependency on
+        # that frame-locals aliasing behavior entirely.
+        namespace = {}
+        exec(func_body, namespace)
+        return namespace["_wrapper"]
 
 
 class FunctionRevision(BaseModel):
