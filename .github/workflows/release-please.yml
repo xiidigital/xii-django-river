@@ -21,6 +21,10 @@ name: release-please
 on:
   push:
     branches: [master]
+  # Allow a maintainer to manually trigger this workflow from the GitHub UI.
+  # Useful for re-running a release creation that failed transiently without
+  # needing to push a dummy commit.
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -32,5 +36,6 @@ jobs:
     steps:
       - uses: googleapis/release-please-action@v5
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
